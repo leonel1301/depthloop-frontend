@@ -4,7 +4,7 @@ import Link from "next/link";
 const steps = [
   { id: 1, href: "/setup/map", label: "Map" },
   { id: 2, href: "/setup/knowledge", label: "Negocio" },
-  { id: 3, href: "/", label: "Inferir" },
+  { id: 3, href: "/", label: "Inferencia" },
 ] as const;
 
 type Props = { current: 1 | 2 | 3 };
@@ -25,6 +25,7 @@ export function SetupStepper({ current }: Props) {
               title={step.label}
             >
               <span className="setup-step-index">{state === "done" ? <Check size={12} strokeWidth={2.6} /> : step.id}</span>
+              <strong>{step.label}</strong>
             </Link>
           </li>
         );

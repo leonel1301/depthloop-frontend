@@ -335,16 +335,18 @@ button { color: inherit; }
 .setup-step { display: flex; align-items: center; flex: 0 0 auto; }
 .setup-step-line { width: 16px; height: 1px; background: var(--line-strong); margin: 0 5px; }
 .setup-step-link {
-  width: 32px;
+  width: auto;
   height: 32px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   text-decoration: none;
   color: var(--muted);
   padding: 0;
-  border-radius: 50%;
+  border-radius: 8px;
 }
-.setup-step-link:hover { background: var(--bg-hover); color: var(--text); }
+.setup-step-link:hover { color: var(--text); }
+.setup-step-link strong { color: inherit; font-size: 11px; font-weight: 620; white-space: nowrap; }
 .setup-step-index {
   width: 32px;
   height: 32px;
@@ -357,6 +359,8 @@ button { color: inherit; }
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 .setup-step-current .setup-step-index { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.setup-step-current .setup-step-link { color: var(--text); }
+.setup-step-current .setup-step-link strong { font-weight: 700; }
 .setup-step-done .setup-step-index { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); color: var(--accent); }
 
 .source-toolbar { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -1850,8 +1854,6 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
   .schema-body { grid-template-columns: 1fr; }
   .concept-list { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
   .source-pills { max-width: 140px; }
-  .setup-step-link strong { display: none; }
-  .setup-step-current .setup-step-link strong { display: inline; }
 }
 
 @media (max-width: 720px) {
