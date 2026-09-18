@@ -1,0 +1,329 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-17T04:15:00.000Z",
+  "title": "Design System: DepthLoop",
+  "extensions": {
+    "colorMeta": {
+      "corporate-blue": {
+        "role": "primary",
+        "displayName": "Corporate Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#93c5fd", "#dbeafe"]
+      },
+      "corporate-blue-hover": {
+        "role": "primary",
+        "displayName": "Corporate Blue Hover",
+        "canonical": "#1d4ed8",
+        "tonalRamp": ["#1e1b4b", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#dbeafe"]
+      },
+      "corporate-blue-soft": {
+        "role": "primary",
+        "displayName": "Corporate Blue Wash",
+        "canonical": "#eff4ff",
+        "tonalRamp": ["#1e3a8a", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe", "#eff4ff"]
+      },
+      "accent-on": {
+        "role": "neutral",
+        "displayName": "Accent On White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc", "#ffffff"]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#0f172a",
+        "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"]
+      },
+      "slate-secondary": {
+        "role": "neutral",
+        "displayName": "Slate Secondary",
+        "canonical": "#334155",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"]
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "#64748b",
+        "tonalRamp": ["#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc"]
+      },
+      "paper-canvas": {
+        "role": "neutral",
+        "displayName": "Cool Paper Canvas",
+        "canonical": "#f3f5f8",
+        "tonalRamp": ["#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#eef1f6", "#f3f5f8", "#ffffff"]
+      },
+      "paper-elevated": {
+        "role": "neutral",
+        "displayName": "Elevated White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f3f5f8", "#f8fafc", "#ffffff"]
+      },
+      "paper-muted": {
+        "role": "neutral",
+        "displayName": "Muted Paper",
+        "canonical": "#eef1f6",
+        "tonalRamp": ["#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#eef1f6", "#f3f5f8", "#ffffff"]
+      },
+      "paper-hover": {
+        "role": "neutral",
+        "displayName": "Hover Paper",
+        "canonical": "#f7f9fc",
+        "tonalRamp": ["#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#eef1f6", "#f7f9fc", "#ffffff"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline Slate",
+        "canonical": "#e2e8f0",
+        "tonalRamp": ["#1e293b", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#cbd5e1",
+        "tonalRamp": ["#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc"]
+      },
+      "amber-caution": {
+        "role": "tertiary",
+        "displayName": "Amber Caution",
+        "canonical": "#b45309",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#fbbf24", "#fde68a", "#fffbeb"]
+      },
+      "rose-danger": {
+        "role": "tertiary",
+        "displayName": "Rose Danger",
+        "canonical": "#e11d48",
+        "tonalRamp": ["#4c0519", "#9f1239", "#be123c", "#e11d48", "#fb7185", "#fda4af", "#fecdd3", "#fff1f2"]
+      },
+      "teal-success": {
+        "role": "secondary",
+        "displayName": "Teal Success",
+        "canonical": "#0f766e",
+        "tonalRamp": ["#042f2e", "#115e59", "#0f766e", "#0d9488", "#14b8a6", "#5eead4", "#99f6e4", "#f0fdfa"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Selected concept name in the explorer detail pane only (26px / 700 / −0.4px)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Overlay drawer titles at 22px; dialog titles sit at 20px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Page titles at 16px / 650; DepthLoop wordmark at 16px / 750."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "App default 13px / 400 / 1.45 Inter. Panel titles share 13px at 650."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table headers, chips, form labels, and confidence pills at 11px / 650."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rest",
+        "value": "0 1px 2px rgba(15, 23, 42, 0.05)",
+        "purpose": "Hairline companion on resting panels, explorer, and selected segmented tabs."
+      },
+      {
+        "name": "rest-dark",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.28)",
+        "purpose": "Paired dark-theme rest shadow on the same surfaces."
+      },
+      {
+        "name": "dialog",
+        "value": "0 16px 40px rgba(15, 23, 42, 0.18)",
+        "purpose": "Centered dialog cards over the 50% slate scrim."
+      },
+      {
+        "name": "drawer",
+        "value": "-18px 0 48px rgba(15, 23, 42, 0.22)",
+        "purpose": "Source drawer sliding from the right."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px rgba(37, 99, 235, 0.18)",
+        "purpose": "Focus-visible fields and selected engine cards. Dark pair: rgba(59, 130, 246, 0.28)."
+      },
+      {
+        "name": "header-glass",
+        "value": "backdrop-filter: blur(12px)",
+        "purpose": "Sticky header frost over scrolling workspace content."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spin",
+        "value": "0.8s linear infinite",
+        "purpose": "Loading spinner on connect and save."
+      },
+      {
+        "name": "chevron-toggle",
+        "value": "transform 0.2s",
+        "purpose": "Advanced-options chevron rotate."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "prefers-reduced-motion collapses animation duration."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "workspace-stack",
+        "value": "1100px",
+        "purpose": "Workspace columns and concept explorer stack; idle stepper labels hide (current keeps its name); chrome wraps; panel heads wrap."
+      },
+      {
+        "name": "compact-chrome",
+        "value": "720px",
+        "purpose": "Header and page inset tighten to 10px; source pills leave the header; icon tools grow to 40px; page toolbar stacks."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid corporate-blue action for connect, save, and continue.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Agregar conexión</button>",
+      "css": ".ds-btn-primary { height: 34px; padding: 0 16px; border: 0; border-radius: 7px; background: var(--accent); color: var(--accent-fg); font-family: Inter, ui-sans-serif, sans-serif; font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; } .ds-btn-primary:hover { background: var(--accent-hover); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); } .ds-btn-primary:active { background: var(--accent-hover); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Hairline companion action beside a primary in save bars and empty states.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Cancelar</button>",
+      "css": ".ds-btn-secondary { height: 34px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--bg-elevated); color: var(--text-secondary); font-family: Inter, ui-sans-serif, sans-serif; font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; } .ds-btn-secondary:hover { background: var(--bg-muted); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); } .ds-btn-secondary:active { background: var(--bg-muted); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet chrome control for revealing a collapsed panel.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">Mostrar revisión</button>",
+      "css": ".ds-btn-ghost { height: 32px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--bg-elevated); color: var(--text-secondary); font-family: Inter, ui-sans-serif, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; } .ds-btn-ghost:hover { border-color: var(--accent); color: var(--text); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); } .ds-btn-ghost:active { border-color: var(--accent); }"
+    },
+    {
+      "name": "Icon Tool",
+      "kind": "button",
+      "refersTo": "button-icon-tool",
+      "description": "32px header and panel tool for add, manage, theme, and collapse.",
+      "html": "<button class=\"ds-icon-tool\" type=\"button\" aria-label=\"Agregar fuente\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg></button>",
+      "css": ".ds-icon-tool { width: 32px; height: 32px; border: 1px solid var(--line); background: var(--bg-elevated); color: var(--muted); border-radius: 7px; display: grid; place-items: center; cursor: pointer; } .ds-icon-tool:hover { color: var(--text); border-color: var(--line-strong); } .ds-icon-tool:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); } .ds-icon-tool:active { color: var(--text); }"
+    },
+    {
+      "name": "Source Pill",
+      "kind": "chip",
+      "refersTo": "chip-source",
+      "description": "Connected-source chip in the sticky header chrome.",
+      "html": "<span class=\"ds-source-pill\">commerce_prod</span>",
+      "css": ".ds-source-pill { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--bg-muted); border: 1px solid var(--line); color: var(--text-secondary); font-family: Inter, ui-sans-serif, sans-serif; font-size: 12px; font-weight: 600; white-space: nowrap; } .ds-source-pill:hover { border-color: var(--line-strong); } .ds-source-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }"
+    },
+    {
+      "name": "Confidence Pill",
+      "kind": "chip",
+      "refersTo": "chip-stat-warning",
+      "description": "Percent badge: teal high, amber medium, rose low.",
+      "html": "<span class=\"ds-confidence ds-confidence-medium\">78%</span>",
+      "css": ".ds-confidence { border-radius: 999px; padding: 2px 6px; font-family: Inter, ui-sans-serif, sans-serif; font-size: 11px; font-weight: 700; white-space: nowrap; } .ds-confidence-high { color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); } .ds-confidence-medium { color: var(--amber); background: var(--amber-soft); } .ds-confidence-low { color: var(--red); background: var(--red-soft); } .ds-confidence:hover { filter: brightness(0.97); } .ds-confidence:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }"
+    },
+    {
+      "name": "Workspace Panel",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "8px elevated panel with 64px heading, stat chips, and hairline rest shadow.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-head\"><div><h2>Revisión</h2><p>Confirma lo dudoso antes de seguir.</p></div><span class=\"ds-stat-warn\">4 pendientes</span></div></section>",
+      "css": ".ds-panel { border: 1px solid var(--line); background: var(--bg-elevated); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; font-family: Inter, ui-sans-serif, sans-serif; color: var(--text); } .ds-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: 64px; padding: 0 14px; border-bottom: 1px solid var(--line); } .ds-panel-head h2 { margin: 0; font-size: 13px; font-weight: 650; line-height: 1.2; } .ds-panel-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px; } .ds-stat-warn { display: inline-flex; align-items: center; height: 26px; padding: 0 8px; border-radius: 999px; color: var(--amber); background: var(--amber-soft); border: 1px solid color-mix(in srgb, var(--amber) 22%, transparent); font-size: 11px; font-weight: 650; } .ds-panel:hover { border-color: var(--line-strong); } .ds-panel:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }"
+    },
+    {
+      "name": "Connector Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "13px form field on canvas fill with corporate-blue focus ring.",
+      "html": "<label class=\"ds-field\"><span>Host</span><input class=\"ds-input\" type=\"text\" value=\"db.internal\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: Inter, ui-sans-serif, sans-serif; } .ds-field span { color: var(--muted); font-size: 11px; font-weight: 600; } .ds-input { width: 100%; height: 36px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line-strong); outline: none; background: var(--bg); color: var(--text); font-size: 13px; } .ds-input:hover { border-color: var(--line-strong); } .ds-input:focus, .ds-input:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }"
+    },
+    {
+      "name": "Concept Item",
+      "kind": "custom",
+      "refersTo": "card-panel",
+      "description": "Explorer row: 8px, 28px blue icon well, active blue wash.",
+      "html": "<button class=\"ds-concept ds-concept-active\" type=\"button\"><span class=\"ds-concept-icon\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18\"/></svg></span><span class=\"ds-concept-copy\"><strong>Pedido</strong><small>8 datos · tabla orders</small></span><span class=\"ds-confidence-mini\">92%</span></button>",
+      "css": ".ds-concept { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text); font-family: Inter, ui-sans-serif, sans-serif; } .ds-concept:hover { background: var(--bg-hover); } .ds-concept-active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); } .ds-concept:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); } .ds-concept-icon { width: 28px; height: 28px; display: grid; place-items: center; background: var(--bg-muted); color: var(--accent); border-radius: 7px; } .ds-concept-copy { display: grid; min-width: 0; } .ds-concept-copy strong { font-size: 13px; font-weight: 650; } .ds-concept-copy small { color: var(--muted); font-size: 11px; } .ds-confidence-mini { border-radius: 999px; padding: 2px 6px; font-size: 11px; font-weight: 700; color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent); }"
+    },
+    {
+      "name": "Setup Stepper",
+      "kind": "nav",
+      "refersTo": "nav-stepper",
+      "description": "Fully rounded chrome track with 20px circle indices; current fills corporate blue.",
+      "html": "<nav class=\"ds-stepper\" aria-label=\"Pasos\"><a class=\"ds-step ds-step-done\" href=\"#\"><span class=\"ds-step-index\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"><path d=\"M5 12l5 5L20 7\"/></svg></span><strong>Map</strong></a><span class=\"ds-step-line\"></span><a class=\"ds-step ds-step-current\" href=\"#\" aria-current=\"step\"><span class=\"ds-step-index\">2</span><strong>Negocio</strong></a></nav>",
+      "css": ".ds-stepper { display: flex; align-items: center; background: var(--bg-muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px 4px 6px; font-family: Inter, ui-sans-serif, sans-serif; } .ds-step { display: flex; align-items: center; gap: 7px; text-decoration: none; color: var(--muted); padding: 4px 0; } .ds-step strong { font-size: 12px; font-weight: 600; color: var(--muted); } .ds-step-index { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font-size: 10px; font-weight: 700; } .ds-step-current .ds-step-index { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); } .ds-step-current strong { color: var(--text); } .ds-step-done .ds-step-index { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); color: var(--accent); } .ds-step-line { width: 18px; height: 1px; background: var(--line-strong); margin-right: 8px; } .ds-step:hover strong { color: var(--text); } .ds-step:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-radius: 999px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Confirmed Ledger",
+    "overview": "DepthLoop's shipped Map is a dense corporate operations desk: sticky product chrome, source pills in the header, and two working panels where structure is listed and confirmations are decided in a table. The atmosphere is quiet, light, and exacting. Surfaces sit on cool slate paper with hairline borders. Corporate blue is the only action color; it marks the current step, primary buttons, selection, and focus. Teal, amber, and rose speak only as confidence and status.\n\nThe system is Inter at 13px, not a marketing site. Density is the point: a 56px sticky header, 64px panel heads, 26px stat chips, compact pills. Light on cool paper is the canonical theme. Dark is a paired night desk on the same geometry and type ramp, not a second identity.\n\nThe wordmark is DepthLoop at 16px / 750 beside the 30×30 `/depthloop-icon-v2.png` mark, clipped to 8px. New surfaces inherit this ledger, not a looser marketing layout.",
+    "keyCharacteristics": [
+      "Cool slate paper with a single corporate-blue accent",
+      "Inter at 13px with a tight 26 / 22 / 16 / 13 / 11 ramp",
+      "Hairline borders and a 1px rest shadow; large shadows only on overlays",
+      "7px controls, 8px panels, fully rounded pills",
+      "Dual light/dark themes sharing one geometry"
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Corporate blue is the only action color. Teal, amber, and rose are status, never chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wash Rule",
+        "body": "Selection, confidence, pending, and danger sit on translucent washes, not solid blocks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Thirteen Rule",
+        "body": "Body copy, chrome, and forms are 13px Inter. 16px is page title and wordmark; 26px is the selected concept name only.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Panel Desk Rule",
+        "body": "The working canvas is a two-column grid (structure | review) with 10px gutters, a sticky 56px header, and 64px panel heads. Below 1100px the columns stack.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Rest Rule",
+        "body": "Resting surfaces use a 1px line plus the 1px rest shadow. Large shadows are overlay-only.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Seven-and-Pill Rule",
+        "body": "Controls are 7px. Workspace panels are 8px. Status, sources, and the stepper live at 999px.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do use Corporate Blue for primary actions, the current step, selected rows, and the 3px focus ring.",
+      "Do keep light tokens as the canonical values and restyle through the existing dark variables.",
+      "Do set body at 13px Inter; page titles and the wordmark at 16px; concept names at 26px.",
+      "Do use 7px radius on buttons, icon tools, and fields; 8px on workspace panels; 999px on pills and the stepper.",
+      "Do mark selection with Corporate Blue Wash, not a heavy fill or a rest-surface drop shadow.",
+      "Do keep the wordmark DepthLoop at 16px / 750 beside `/depthloop-icon-v2.png` at 30×30, 8px."
+    ],
+    "donts": [
+      "Don't use green (or any second hue) as the action accent. Corporate blue is the only accent; teal is confirmation status.",
+      "Don't introduce a second typeface or a display serif. Inter is the single UI voice.",
+      "Don't rest-elevate panels with large drop shadows; only drawers and dialogs lift.",
+      "Don't square off source pills, confidence badges, or the stepper track.",
+      "Don't treat placeholder next-step cards as the layout system for new screens.",
+      "Don't put an uppercase eyebrow or kicker above a heading. The heading carries its own weight."
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+export const INDUSTRIES = [
+  "Tecnología / software",
+  "Comercio / retail",
+  "Finanzas y seguros",
+  "Salud",
+  "Educación",
+  "Manufactura",
+  "Logística y transporte",
+  "Servicios profesionales",
+  "Hostelería y turismo",
+  "Energía",
+  "Administración pública",
+  "Otro",
+] as const;
+
+export const COUNTRIES = [
+  "Argentina",
+  "Bolivia",
+  "Brasil",
+  "Chile",
+  "Colombia",
+  "Costa Rica",
+  "Cuba",
+  "Ecuador",
+  "El Salvador",
+  "España",
+  "Estados Unidos",
+  "Guatemala",
+  "Honduras",
+  "México",
+  "Nicaragua",
+  "Panamá",
+  "Paraguay",
+  "Perú",
+  "Portugal",
+  "Puerto Rico",
+  "República Dominicana",
+  "Uruguay",
+  "Venezuela",
+  "Otro",
+] as const;
+
+export const COMPANY_SIZES = ["1–10", "11–50", "51–200", "201–1000", "Más de 1000"] as const;

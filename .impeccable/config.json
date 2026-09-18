@@ -1,0 +1,36 @@
+{
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-09-17T20:40:00.000Z",
+        "reason": "User requested Geist as the product UI face."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sfmono-regular",
+        "createdAt": "2026-09-17T17:16:57.483Z",
+        "reason": "Documented mono stack for source field names and schema JSON, not UI display."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "geist",
+        "createdAt": "2026-09-17T20:41:34.211Z",
+        "reason": "DESIGN.md now declares Geist as the single UI face."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-09-17T21:48:21.237Z",
+        "reason": "Pre-existing auth progress fill uses width; company chrome CSS does not animate layout."
+      }
+    ]
+  }
+}
