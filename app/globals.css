@@ -329,32 +329,34 @@ button { color: inherit; }
   display: flex;
   align-items: center;
   min-width: 0;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .setup-step { display: flex; align-items: center; flex: 0 0 auto; }
-.setup-step-line { width: 18px; height: 1px; background: var(--line-strong); margin-right: 8px; }
+.setup-step-line { width: 16px; height: 1px; background: var(--line-strong); margin: 0 5px; }
 .setup-step-link {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  text-decoration: none;
-  color: var(--muted);
-  padding: 4px 0;
-}
-.setup-step-link strong { font-size: 12px; font-weight: 600; color: var(--muted); }
-.setup-step-index {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--line-strong);
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  font-size: 10px;
+  text-decoration: none;
+  color: var(--muted);
+  padding: 0;
+  border-radius: 50%;
+}
+.setup-step-link:hover { background: var(--bg-hover); color: var(--text); }
+.setup-step-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
   font-weight: 700;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 .setup-step-current .setup-step-index { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.setup-step-current .setup-step-link strong { color: var(--text); }
 .setup-step-done .setup-step-index { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); color: var(--accent); }
 
 .source-toolbar { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -362,16 +364,19 @@ button { color: inherit; }
 .source-pill {
   display: inline-flex;
   align-items: center;
-  height: 28px;
+  gap: 6px;
+  height: 32px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 8px;
+  background: var(--bg-hover);
   border: 1px solid var(--line);
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 650;
   white-space: nowrap;
 }
+.source-pill > span { display: block; white-space: nowrap; }
+.source-pill svg { flex: 0 0 auto; color: var(--muted); }
 
 .page-toolbar {
   padding: 10px 16px 8px;
@@ -3478,6 +3483,8 @@ h2 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
 .topbar-actions { gap: 4px; }
 .source-toolbar { flex: 0 0 auto; }
 .source-pills {
+  flex: 0 0 auto;
+  min-width: max-content;
   max-width: none;
   padding: 2px;
   margin: -2px;

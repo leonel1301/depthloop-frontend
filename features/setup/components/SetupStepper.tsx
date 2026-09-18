@@ -17,9 +17,14 @@ export function SetupStepper({ current }: Props) {
         return (
           <li key={step.id} className={`setup-step setup-step-${state}`}>
             {index > 0 ? <span className="setup-step-line" aria-hidden="true" /> : null}
-            <Link href={step.href} className="setup-step-link" aria-current={state === "current" ? "step" : undefined} title={step.label}>
+            <Link
+              href={step.href}
+              className="setup-step-link"
+              aria-label={`${step.label}${state === "current" ? ", paso actual" : state === "done" ? ", completado" : ""}`}
+              aria-current={state === "current" ? "step" : undefined}
+              title={step.label}
+            >
               <span className="setup-step-index">{state === "done" ? <Check size={12} strokeWidth={2.6} /> : step.id}</span>
-              <strong>{step.label}</strong>
             </Link>
           </li>
         );

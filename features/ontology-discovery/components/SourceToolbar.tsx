@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Settings2, X } from "lucide-react";
+import { Database, Plus, Settings2, X } from "lucide-react";
 import type { ConnectedSource, DbConnectionConfig, SchemaSnapshot } from "../models/ontology";
 import type { QuerySource } from "../services/workspaceStore";
 import { DbConnector, type IntakeMode } from "./DbConnector";
@@ -72,8 +72,9 @@ export function SourceToolbar({
         <div className="source-toolbar">
           <div className="source-pills" aria-label="Fuentes conectadas">
             {pills.map((source) => (
-              <span key={source.id} className="source-pill">
-                {source.label}
+              <span key={source.id} className="source-pill" title={`Fuente activa: ${source.label}`}>
+                <Database size={13} aria-hidden="true" />
+                <span>{source.label}</span>
               </span>
             ))}
           </div>
