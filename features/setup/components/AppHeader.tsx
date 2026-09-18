@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ShieldCheck } from "lucide-react";
 import { SetupStepper } from "./SetupStepper";
 import { ThemeToggle } from "./ThemeToggle";
 import { CompanyBrand } from "@/features/auth/components/CompanyBrand";
@@ -37,12 +36,6 @@ export function AppHeader({ currentStep, extras }: Props) {
         ) : null}
         <div className="topbar-actions">
           {extras}
-          {setup ? (
-            <span className="readonly-status" title="DepthLoop solo consulta tus fuentes">
-              <ShieldCheck size={14} />
-              <span>Solo lectura</span>
-            </span>
-          ) : null}
           <ThemeToggle />
           <UserProfile />
         </div>

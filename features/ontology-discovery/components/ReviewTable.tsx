@@ -110,19 +110,19 @@ export function ReviewTable({ ontologyId, items, reviewed, selectedId, onSelect,
             {item.status === "pending" ? (
               editing ? (
                 <button type="button" className="confirm-action" onClick={() => { onUpdate(item.itemId, "confirmed", { name: draft.name, type: draft.type }); setEditingId(undefined); }}>
-                  <Check size={14} /> Guardar corrección
+                  <Check size={14} /> Aplicar
                 </button>
               ) : (
                 <>
-                  <button type="button" className="confirm-action" onClick={() => onUpdate(item.itemId, "confirmed")}><Check size={14} /> Es correcto</button>
+                  <button type="button" className="confirm-action" onClick={() => onUpdate(item.itemId, "confirmed")}><Check size={14} /> Confirmar</button>
                   <button type="button" aria-label="Corregir interpretación" title="Corregir interpretación" onClick={() => { setEditingId(item.itemId); setDraft({ name: item.corrections?.name || item.suggestion.name, type: item.corrections?.type || item.suggestion.type }); }}><Pencil size={14} /></button>
-                  <button type="button" aria-label="Marcar como no aplicable" title="No aplica" onClick={() => onUpdate(item.itemId, "rejected")}><X size={14} /></button>
+                  <button type="button" aria-label="Descartar interpretación" title="Descartar" onClick={() => onUpdate(item.itemId, "rejected")}><X size={14} /></button>
                 </>
               )
             ) : (
               <>
                 <span className={`status-label ${item.status}`}>
-                  {item.status === "confirmed" ? <><CheckCircle2 size={13} /> Confirmado</> : <><CircleX size={13} /> No aplica</>}
+                  {item.status === "confirmed" ? <><CheckCircle2 size={13} /> Confirmado</> : <><CircleX size={13} /> Descartado</>}
                 </span>
                 <button type="button" aria-label="Deshacer" onClick={() => onUpdate(item.itemId, "pending")}><RotateCcw size={14} /></button>
               </>
