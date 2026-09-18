@@ -2,32 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AppHeader } from "@/features/setup/components/AppHeader";
-import { ConfirmationPanel, MapEmpty, SourceToolbar, UnderstandingCatalog, WorkspaceNav } from "@/features/ontology-discovery/components";
-import type { IntakeMode } from "@/features/ontology-discovery/components/DbConnector";
+import { ConfirmationPanel, MapEmpty, UnderstandingCatalog, WorkspaceNav } from "@/features/ontology-discovery/components";
 import type { WorkspaceView } from "@/features/ontology-discovery/components/WorkspaceNav";
 import { useConfirmations, useOntologyDiscovery } from "@/features/ontology-discovery/hooks";
 
 export default function SetupMapPage() {
   const {
-    businessId,
     ready,
-    discoverFromSchema,
-    discoverFromConnection,
     ontology,
-    isLoading,
-    error,
-    sources,
     querySources,
     confirmations: storedConfirmations,
     setConfirmations,
     hasSession,
     removeSource,
+    openSourceDialog,
   } = useOntologyDiscovery();
   const persistConfirmations = useCallback((items: typeof storedConfirmations) => setConfirmations(items), [setConfirmations]);
   const { confirmations, reviewed, updateItem } = useConfirmations(ontology, storedConfirmations, persistConfirmations);
   const [selectedId, setSelectedId] = useState<string>();
-  const [dialog, setDialog] = useState<"add" | "manage" | null>(null);
-  const [intakeMode, setIntakeMode] = useState<IntakeMode>("schema");
   const [view, setView] = useState<WorkspaceView>("structure");
   const [navCollapsed, setNavCollapsed] = useState(false);
   const selectNode = useCallback((id: string) => {
@@ -36,42 +28,17 @@ export default function SetupMapPage() {
   }, []);
   const activeId = selectedId ?? ontology?.entities[0]?.id;
   const pending = confirmations.length - reviewed;
-  const openDialog = (mode: "add" | "manage", intake: IntakeMode = "schema") => {
-    setIntakeMode(intake);
-    setDialog(mode);
-  };
 
   useEffect(() => {
     const intake = new URLSearchParams(window.location.search).get("intake");
     if (intake === "database" || intake === "service" || intake === "schema") {
-      setIntakeMode(intake);
-      setDialog("add");
+      openSourceDialog("add", intake);
     }
-  }, []);
+  }, [openSourceDialog]);
 
   return (
     <main className="app-shell">
-      <AppHeader
-        currentStep={1}
-        extras={
-          <SourceToolbar
-            sources={sources}
-            businessId={businessId}
-            isLoading={isLoading}
-            error={error}
-            dialog={dialog}
-            intakeMode={intakeMode}
-            onOpen={openDialog}
-            onClose={() => setDialog(null)}
-            onSubmitConnection={discoverFromConnection}
-            onSubmitSchema={discoverFromSchema}
-            querySources={querySources}
-            liveIds={querySources.filter((source) => hasSession(source.id)).map((source) => source.id)}
-            onRemove={removeSource}
-            showChrome
-          />
-        }
-      />
+      <AppHeader currentStep={1} />
 
       {!ready ? null : ontology ? (
         <div className="app-body">
@@ -108,8 +75,8 @@ export default function SetupMapPage() {
         <MapEmpty
           connections={querySources}
           liveIds={querySources.filter((source) => hasSession(source.id)).map((source) => source.id)}
-          onSchema={() => openDialog("add", "schema")}
-          onConnect={() => openDialog("add", "database")}
+          onSchema={() => openSourceDialog("add", "schema")}
+          onConnect={() => openSourceDialog("add", "database")}
           onRemove={removeSource}
         />
       )}

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ConfirmationItem } from "../models/confirmation";
 import type { ConnectedSource, DbConnectionConfig, OntologyDiscoveryResult, SchemaSnapshot } from "../models/ontology";
+import type { IntakeMode } from "../components/DbConnector";
 import { ontologyApi } from "../services/ontologyApi";
 import { queryApi } from "../services/queryApi";
+import { reviewsApi } from "../services/reviewsApi";
 import { deleteRemoteSource, listRemoteSources, upsertRemoteSource } from "../services/sourcesApi";
 import {
   connectionForQuery,
@@ -16,6 +18,8 @@ import {
   readSecrets,
   clearSecret,
 } from "../services/workspaceStore";
+
+type SourceDialog = "add" | "manage" | null;
 
 function toQuerySource(config: DbConnectionConfig, engine?: string): QuerySource {
   const id = `db-${config.host}-${config.database}-${config.user}`.toLowerCase();
@@ -37,12 +41,15 @@ function toQuerySource(config: DbConnectionConfig, engine?: string): QuerySource
   };
 }
 
-export function useOntologyDiscovery() {
+function useOntologyWorkspace() {
   const [businessId, setBusinessId] = useState("");
   const [sources, setSources] = useState<ConnectedSource[]>([]);
   const [querySources, setQuerySources] = useState<QuerySource[]>([]);
   const [ontology, setOntology] = useState<OntologyDiscoveryResult | null>(null);
   const [confirmations, setConfirmations] = useState<ConfirmationItem[]>([]);
+  const [activeSourceId, setActiveSourceId] = useState("");
+  const [sourceDialog, setSourceDialog] = useState<SourceDialog>(null);
+  const [intakeMode, setIntakeMode] = useState<IntakeMode>("database");
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,31 +71,46 @@ export function useOntologyDiscovery() {
           nextQuery = remoteSources.map((source) => localById.get(source.id) ?? source);
         }
         let nextConfirmations = local.confirmations;
-        if (!nextOntology) {
-          const remote = await ontologyApi.getCurrent(next);
-          if (remote && (!remote.businessId || remote.businessId === next)) {
-            nextOntology = remote;
-            next = remote.businessId || next;
-          }
-        } else if (nextOntology.businessId && nextOntology.businessId !== next) {
+        const remoteOntology = await ontologyApi.getCurrent(next);
+        if (remoteOntology && (!remoteOntology.businessId || remoteOntology.businessId === next)) {
+          nextOntology = remoteOntology;
+          next = remoteOntology.businessId || next;
+        } else if (nextOntology?.businessId && nextOntology.businessId !== next) {
           nextOntology = null;
           nextSources = [];
           nextQuery = [];
           nextConfirmations = [];
-        } else if (!nextOntology.businessId) {
+        } else if (nextOntology && !nextOntology.businessId) {
           nextOntology = { ...nextOntology, businessId: next };
         }
+        if (nextOntology) {
+          try {
+            const remoteReviews = await reviewsApi.list(nextOntology.id);
+            if (remoteReviews.updatedAt != null) {
+              nextConfirmations = remoteReviews.items;
+            } else if (nextConfirmations.length) {
+              await reviewsApi.save(nextOntology.id, nextConfirmations);
+            }
+          } catch {
+            // La copia local cubre el arranque si la API no responde.
+          }
+        }
+        const nextActive = nextQuery.some((source) => source.id === local.activeSourceId)
+          ? local.activeSourceId || nextQuery[0]?.id || ""
+          : nextQuery[0]?.id || nextSources[0]?.id || "";
         setBusinessId(next);
         setOntology(nextOntology);
         setSources(nextSources);
         setQuerySources(nextQuery);
         setConfirmations(nextConfirmations);
+        setActiveSourceId(nextActive);
         writeWorkspace({
           businessId: next,
           ontology: nextOntology,
           sources: nextSources,
           querySources: nextQuery,
           confirmations: nextConfirmations,
+          activeSourceId: nextActive,
         });
       } finally {
         setReady(true);
@@ -99,8 +121,27 @@ export function useOntologyDiscovery() {
 
   useEffect(() => {
     if (!ready || !businessId) return;
-    writeWorkspace({ businessId, ontology, sources, querySources, confirmations });
-  }, [ready, businessId, ontology, sources, querySources, confirmations]);
+    writeWorkspace({ businessId, ontology, sources, querySources, confirmations, activeSourceId });
+  }, [ready, businessId, ontology, sources, querySources, confirmations, activeSourceId]);
+
+  useEffect(() => {
+    if (!ready || !ontology?.id) return;
+    const timer = window.setTimeout(() => {
+      void reviewsApi.save(ontology.id, confirmations).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [ready, ontology?.id, confirmations]);
+
+  const openSourceDialog = useCallback((mode: Exclude<SourceDialog, null>, intake: IntakeMode = "database") => {
+    setError(null);
+    setIntakeMode(intake);
+    setSourceDialog(mode);
+  }, []);
+
+  const closeSourceDialog = useCallback(() => {
+    setSourceDialog(null);
+    setError(null);
+  }, []);
 
   const discoverFromSchema = async (snapshot: SchemaSnapshot) => {
     setIsLoading(true);
@@ -124,6 +165,7 @@ export function useOntologyDiscovery() {
         const exists = current.some((source) => source.label === next.label);
         return exists ? current.map((source) => (source.label === next.label ? next : source)) : [...current, next];
       });
+      setActiveSourceId(next.id);
       void upsertRemoteSource({
         id: next.id,
         kind: "schema",
@@ -131,6 +173,7 @@ export function useOntologyDiscovery() {
         engine: next.engine,
         config: { kind: "schema", host: "", port: 0, user: "", database: snapshot.source.name },
       });
+      return next.label;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ocurrió un error inesperado.";
       setError(message);
@@ -166,6 +209,7 @@ export function useOntologyDiscovery() {
         const exists = current.some((source) => source.id === next.id);
         return exists ? current.map((source) => (source.id === next.id ? next : source)) : [...current, next];
       });
+      setActiveSourceId(querySource.id);
       const snapshot = await queryApi.introspect(config, businessId);
       const result = await ontologyApi.discoverFromSchema({
         ...snapshot,
@@ -175,6 +219,7 @@ export function useOntologyDiscovery() {
       if (stamped.businessId && stamped.businessId !== businessId) setBusinessId(stamped.businessId);
       setOntology(stamped);
       setConfirmations([]);
+      return querySource.label;
     } catch (err) {
       const message = err instanceof Error ? err.message : "No pudimos conectar la fuente.";
       setError(message);
@@ -188,8 +233,15 @@ export function useOntologyDiscovery() {
     clearSecret(sourceId);
     setQuerySources((current) => current.filter((source) => source.id !== sourceId));
     setSources((current) => current.filter((source) => source.id !== sourceId));
+    setActiveSourceId((current) => (current === sourceId ? "" : current));
     void deleteRemoteSource(sourceId);
   };
+
+  const activeSource = querySources.find((source) => source.id === activeSourceId)
+    ?? sources.find((source) => source.id === activeSourceId)
+    ?? querySources[0]
+    ?? sources[0]
+    ?? null;
 
   return {
     businessId,
@@ -207,5 +259,29 @@ export function useOntologyDiscovery() {
     setOntology,
     connectionForQuery,
     hasSession: (sourceId: string) => Boolean(readSecrets()[sourceId]?.password),
+    activeSourceId: activeSource?.id ?? "",
+    setActiveSourceId,
+    activeSource,
+    sourceDialog,
+    intakeMode,
+    openSourceDialog,
+    closeSourceDialog,
   };
+}
+
+type OntologyWorkspace = ReturnType<typeof useOntologyWorkspace>;
+
+const OntologyContext = createContext<OntologyWorkspace | null>(null);
+
+export function OntologyProvider({ children }: { children: ReactNode }) {
+  const value = useOntologyWorkspace();
+  return createElement(OntologyContext.Provider, { value }, children);
+}
+
+export function useOntologyDiscovery() {
+  const value = useContext(OntologyContext);
+  if (!value) {
+    throw new Error("useOntologyDiscovery requiere OntologyProvider.");
+  }
+  return value;
 }

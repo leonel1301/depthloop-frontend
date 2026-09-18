@@ -35,13 +35,10 @@ export function useTheme() {
     setTheme(next);
   }, []);
 
-  const toggle = useCallback(() => {
-    setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      applyTheme(next);
-      return next;
-    });
+  const choose = useCallback((next: Theme) => {
+    applyTheme(next);
+    setTheme(next);
   }, []);
 
-  return { theme, toggle };
+  return { theme, setTheme: choose };
 }

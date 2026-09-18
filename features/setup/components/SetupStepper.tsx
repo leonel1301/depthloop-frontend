@@ -24,8 +24,8 @@ export function SetupStepper({ current }: Props) {
               aria-current={state === "current" ? "step" : undefined}
               title={step.label}
             >
-              <span className="setup-step-index">{state === "done" ? <Check size={12} strokeWidth={2.6} /> : step.id}</span>
-              <strong>{step.label}</strong>
+              <span className="setup-step-index">{state === "done" ? <Check size={11} strokeWidth={2.6} /> : step.id}</span>
+              <strong className="setup-step-label">{step.label}</strong>
             </Link>
           </li>
         );

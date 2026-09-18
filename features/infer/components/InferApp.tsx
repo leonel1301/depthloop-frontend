@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AgentRail } from "./AgentRail";
-import { AddSourceDialog } from "./AddSourceDialog";
 import { InferChat } from "./InferChat";
 import { InferNav } from "./InferNav";
 import { useInferChat } from "../hooks/useInferChat";
+import { SourceToolbar } from "@/features/ontology-discovery/components/SourceToolbar";
 import { useOntologyDiscovery } from "@/features/ontology-discovery/hooks";
 import { connectionForQuery } from "@/features/ontology-discovery/services/workspaceStore";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -14,11 +14,10 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 export function InferApp() {
   const router = useRouter();
   const { session } = useAuth();
-  const { ready, businessId, ontology, querySources, hasSession } = useOntologyDiscovery();
+  const { ready, businessId, ontology, querySources, hasSession, activeSource, openSourceDialog } = useOntologyDiscovery();
   const chat = useInferChat();
   const [navCollapsed, setNavCollapsed] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const source = querySources[0];
+  const source = querySources.find((item) => item.id === activeSource?.id) ?? querySources[0];
   const connection = source ? connectionForQuery(source) : null;
   const live = Boolean(source && hasSession(source.id) && connection?.password);
   const setupPending = ready && !ontology;
@@ -44,7 +43,7 @@ export function InferApp() {
             threads={chat.threads}
             activeId={chat.activeId}
             onToggle={() => setNavCollapsed((value) => !value)}
-            onAdd={() => setAddOpen(true)}
+            onAdd={() => openSourceDialog("add", "database")}
             onCreateChat={chat.createChat}
             onSelect={chat.selectChat}
             onRemove={chat.removeChat}
@@ -68,7 +67,7 @@ export function InferApp() {
           <AgentRail />
         </div>
       )}
-      <AddSourceDialog open={addOpen} onClose={() => setAddOpen(false)} />
+      <SourceToolbar showChrome={false} />
     </main>
   );
 }

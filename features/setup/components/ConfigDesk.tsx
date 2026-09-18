@@ -1,27 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Building2, Database, History, Map, MessageSquareText, Settings2 } from "lucide-react";
+import { ArrowRight, Bot, Building2, Database, History, Map, Settings2, SunMoon } from "lucide-react";
 import { AppHeader } from "./AppHeader";
 import { CompanyForm } from "./CompanyForm";
 import { MapHistory } from "./MapHistory";
+import { ThemePreference } from "./ThemePreference";
 import { SourceRoster } from "@/features/ontology-discovery/components/SourceRoster";
 import { useOntologyDiscovery } from "@/features/ontology-discovery/hooks";
 
 export function ConfigDesk() {
-  const { ready, businessId, ontology, setOntology, querySources, hasSession, removeSource } = useOntologyDiscovery();
+  const { ready, businessId, ontology, setOntology, querySources, hasSession, removeSource, openSourceDialog } = useOntologyDiscovery();
   const concepts = ontology?.entities.length ?? 0;
   const liveIds = querySources.filter((source) => hasSession(source.id)).map((source) => source.id);
 
   return (
     <main className="app-shell settings-shell">
-      <AppHeader
-        extras={
-          <Link className="settings-header-link" href="/">
-            <MessageSquareText size={15} /> Volver al chat
-          </Link>
-        }
-      />
+      <AppHeader />
       {!ready ? null : (
         <section className="settings-page">
           <header className="settings-hero">
@@ -34,6 +29,7 @@ export function ConfigDesk() {
             <aside className="settings-index">
               <nav aria-label="Secciones de configuración">
                 <a href="#empresa"><Building2 size={15} /> Empresa</a>
+                <a href="#preferencias"><SunMoon size={15} /> Preferencias</a>
                 <a href="#fuentes"><Database size={15} /> Fuentes</a>
                 <a href="#mapa"><Map size={15} /> Mapa</a>
                 <a href="#historial"><History size={15} /> Historial</a>
@@ -60,6 +56,17 @@ export function ConfigDesk() {
                 <CompanyForm />
               </section>
 
+              <section className="settings-card" id="preferencias">
+                <header className="settings-card-head">
+                  <span><SunMoon size={17} /></span>
+                  <div>
+                    <h2>Preferencias</h2>
+                    <p>Apariencia de tu espacio de trabajo.</p>
+                  </div>
+                </header>
+                <ThemePreference />
+              </section>
+
               <section className="settings-card" id="fuentes">
                 <header className="settings-card-head">
                   <span><Database size={17} /></span>
@@ -74,9 +81,9 @@ export function ConfigDesk() {
                   <div className="settings-empty">No hay fuentes conectadas todavía.</div>
                 )}
                 <div className="config-actions">
-                  <Link className="secondary-button" href="/setup/map?intake=database">Añadir base</Link>
-                  <Link className="ghost-button" href="/setup/map?intake=service">Añadir API</Link>
-                  <Link className="ghost-button" href="/setup/map?intake=schema">Cargar JSON</Link>
+                  <button type="button" className="secondary-button" onClick={() => openSourceDialog("add", "database")}>Añadir base</button>
+                  <button type="button" className="ghost-button" onClick={() => openSourceDialog("add", "service")}>Añadir API</button>
+                  <button type="button" className="ghost-button" onClick={() => openSourceDialog("add", "schema")}>Cargar JSON</button>
                 </div>
               </section>
 

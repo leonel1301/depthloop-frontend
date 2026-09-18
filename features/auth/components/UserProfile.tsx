@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { UserRound, X } from "lucide-react";
-import { CompanyForm } from "@/features/setup/components/CompanyForm";
 import { useAuth } from "../hooks/useAuth";
 import { initials } from "../services/sessionStore";
 
@@ -11,6 +10,7 @@ export function UserProfile({ compact = false }: { compact?: boolean }) {
   const { session, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const role = session.user.role === "member" ? "Miembro" : "Propietario";
 
   useEffect(() => {
     if (!open) return;
@@ -46,16 +46,16 @@ export function UserProfile({ compact = false }: { compact?: boolean }) {
         ? createPortal(
             <div className="dialog-backdrop" onClick={() => setOpen(false)} role="presentation">
               <div
-                className="dialog-card company-dialog"
+                className="dialog-card profile-dialog"
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="company-dialog-title"
+                aria-labelledby="profile-dialog-title"
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="dialog-head">
                   <div>
-                    <h2 id="company-dialog-title">Empresa</h2>
-                    <p className="section-copy">Actualiza el logo y los datos del negocio.</p>
+                    <h2 id="profile-dialog-title">Perfil</h2>
+                    <p className="section-copy">Datos de tu cuenta.</p>
                   </div>
                   <button
                     ref={closeRef}
@@ -67,7 +67,20 @@ export function UserProfile({ compact = false }: { compact?: boolean }) {
                     <X size={16} />
                   </button>
                 </div>
-                <CompanyForm />
+                <dl className="profile-details">
+                  <div>
+                    <dt>Nombre</dt>
+                    <dd>{session.user.fullName}</dd>
+                  </div>
+                  <div>
+                    <dt>Correo</dt>
+                    <dd>{session.user.email}</dd>
+                  </div>
+                  <div>
+                    <dt>Rol</dt>
+                    <dd>{role}</dd>
+                  </div>
+                </dl>
                 <button type="button" className="ghost-button company-logout" onClick={logout}>
                   Cerrar sesión
                 </button>

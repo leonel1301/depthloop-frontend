@@ -18,6 +18,7 @@ export type WorkspaceSnapshot = {
   sources: ConnectedSource[];
   querySources: QuerySource[];
   confirmations: ConfirmationItem[];
+  activeSourceId?: string;
 };
 
 type SecretMap = Record<string, { password?: string; apiKey?: string }>;
@@ -40,6 +41,7 @@ export function readWorkspace(): WorkspaceSnapshot {
     sources: [],
     querySources: [],
     confirmations: [],
+    activeSourceId: undefined,
   };
   if (typeof window === "undefined") return fallback;
   try {
@@ -52,6 +54,7 @@ export function readWorkspace(): WorkspaceSnapshot {
       sources: parsed.sources ?? [],
       querySources: parsed.querySources ?? [],
       confirmations: parsed.confirmations ?? [],
+      activeSourceId: parsed.activeSourceId,
     };
   } catch {
     return fallback;
@@ -73,7 +76,7 @@ export function bindWorkspaceToBusiness(businessId: string): WorkspaceSnapshot {
   const owned = current.ontology?.businessId === businessId;
   const next: WorkspaceSnapshot = owned
     ? { ...current, businessId }
-    : { businessId, ontology: null, sources: [], querySources: [], confirmations: [] };
+    : { businessId, ontology: null, sources: [], querySources: [], confirmations: [], activeSourceId: undefined };
   writeWorkspace(next);
   return next;
 }

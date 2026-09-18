@@ -4,16 +4,22 @@ import { useEffect, useState } from "react";
 import { queryApi, type InferHistoryTurn, type InferStep } from "@/features/ontology-discovery/services/queryApi";
 import type { DbConnectionConfig } from "@/features/ontology-discovery/models/ontology";
 import type { InferMessage, InferThread } from "../models";
+import { chatsApi } from "../services/chatsApi";
 import {
+  clearLocalThreads,
   emptyThread,
   persistableMessages,
-  readThreads,
+  readLocalThreads,
   titleFromMessages,
-  writeThreads,
 } from "../services/chatStore";
 
 function nextId() {
   return globalThis.crypto?.randomUUID?.() ?? `m-${Date.now()}-${Math.random()}`;
+}
+
+async function persistThread(thread: InferThread) {
+  if (!persistableMessages(thread.messages).length) return;
+  await chatsApi.upsert(thread);
 }
 
 export function useInferChat() {
@@ -24,16 +30,39 @@ export function useInferChat() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const stored = readThreads();
-    setThreads(stored);
-    setActiveId(stored[0].id);
-    setReady(true);
+    let cancelled = false;
+    void (async () => {
+      try {
+        let loaded = await chatsApi.list();
+        if (!loaded.length) {
+          const local = readLocalThreads();
+          if (local.length) {
+            loaded = [];
+            for (const thread of local) {
+              loaded.push(await chatsApi.upsert(thread));
+            }
+            clearLocalThreads();
+          }
+        } else {
+          clearLocalThreads();
+        }
+        if (cancelled) return;
+        const resolved = loaded.length ? loaded : [emptyThread()];
+        setThreads(resolved);
+        setActiveId(resolved[0].id);
+      } catch {
+        if (cancelled) return;
+        const fallback = [emptyThread()];
+        setThreads(fallback);
+        setActiveId(fallback[0].id);
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    writeThreads(threads);
-  }, [ready, threads]);
 
   const active = threads.find((thread) => thread.id === activeId) ?? threads[0];
   const messages = active?.messages ?? [];
@@ -63,6 +92,7 @@ export function useInferChat() {
   };
 
   const removeChat = (id: string) => {
+    void chatsApi.remove(id).catch(() => undefined);
     setThreads((current) => {
       const next = current.filter((thread) => thread.id !== id);
       const resolved = next.length ? next : [emptyThread()];
@@ -96,22 +126,32 @@ export function useInferChat() {
     try {
       const result = await queryApi.ask(connection, question, { businessId, history });
       const steps: InferStep[] = result.steps ?? [];
-      updateActive((thread) => ({
-        ...thread,
-        updatedAt: Date.now(),
-        messages: thread.messages.map((message) =>
-          message.id === pending.id
-            ? { ...message, pending: false, text: result.answer, steps }
-            : message,
-        ),
-      }));
+      let saved: InferThread | null = null;
+      updateActive((thread) => {
+        saved = {
+          ...thread,
+          updatedAt: Date.now(),
+          messages: thread.messages.map((message) =>
+            message.id === pending.id
+              ? { ...message, pending: false, text: result.answer, steps }
+              : message,
+          ),
+        };
+        return saved;
+      });
+      if (saved) await persistThread(saved);
     } catch (err) {
       const message = err instanceof Error ? err.message : "No pudimos interpretar la pregunta.";
       setError(message);
-      updateActive((thread) => ({
-        ...thread,
-        messages: thread.messages.filter((item) => item.id !== pending.id),
-      }));
+      let saved: InferThread | null = null;
+      updateActive((thread) => {
+        saved = {
+          ...thread,
+          messages: thread.messages.filter((item) => item.id !== pending.id),
+        };
+        return saved;
+      });
+      if (saved) await persistThread(saved).catch(() => undefined);
     } finally {
       setLoading(false);
     }

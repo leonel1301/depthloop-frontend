@@ -21,33 +21,29 @@ export function persistableMessages(messages: InferMessage[]): InferMessage[] {
     .map((message) => ({ ...message, pending: undefined }));
 }
 
-export function readThreads(): InferThread[] {
-  if (typeof window === "undefined") return [emptyThread()];
+export function readLocalThreads(): InferThread[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(CHATS_KEY);
-    if (!raw) return [emptyThread()];
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as Partial<InferThread>[];
-    const threads = parsed
+    return parsed
       .filter((item) => item && typeof item.id === "string")
       .map((item) => ({
         id: item.id as string,
         title: item.title || "Nueva conversación",
         updatedAt: item.updatedAt || Date.now(),
         messages: persistableMessages(item.messages ?? []),
-      }));
-    return threads.length ? threads : [emptyThread()];
+      }))
+      .filter((thread) => thread.messages.length > 0);
   } catch {
-    return [emptyThread()];
+    return [];
   }
 }
 
-export function writeThreads(threads: InferThread[]) {
+export function clearLocalThreads() {
   if (typeof window === "undefined") return;
-  const payload = threads.map((thread) => ({
-    ...thread,
-    messages: persistableMessages(thread.messages),
-  }));
-  localStorage.setItem(CHATS_KEY, JSON.stringify(payload));
+  localStorage.removeItem(CHATS_KEY);
 }
 
 export function titleFromMessages(messages: InferMessage[]) {

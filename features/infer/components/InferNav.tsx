@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Database, MessageSquare, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings2, Trash2 } from "lucide-react";
-import { ThemeToggle } from "@/features/setup/components/ThemeToggle";
 import { CompanyBrand } from "@/features/auth/components/CompanyBrand";
 import { UserProfile } from "@/features/auth/components/UserProfile";
 import type { InferThread } from "../models";
@@ -130,7 +129,6 @@ export function InferNav({
             <Settings2 size={16} aria-hidden="true" />
             {collapsed ? null : <span className="app-nav-label">Configuración</span>}
           </button>
-          <ThemeToggle showLabel={!collapsed} />
         </div>
         <UserProfile compact={collapsed} />
       </div>

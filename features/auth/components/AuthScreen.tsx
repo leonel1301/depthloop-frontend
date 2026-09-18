@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, LoaderCircle, LockKeyhole } from "lucide-react";
 import Image from "next/image";
-import { ThemeToggle } from "@/features/setup/components/ThemeToggle";
 import { COMPANY_SIZES, COUNTRIES, INDUSTRIES } from "../catalog";
 import { authApi } from "../services/authApi";
 import type { AuthSession } from "../services/sessionStore";
@@ -83,7 +82,6 @@ export function AuthScreen({ onAuthed }: Props) {
             </span>
             <span className="auth-wordmark">DepthLoop</span>
           </div>
-          <ThemeToggle />
         </div>
         <div className="auth-story-copy">
           <span className="auth-story-kicker"><i /> Una visión compartida</span>

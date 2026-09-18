@@ -1,28 +1,15 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, NotebookText, Plus, Settings2, Trash2, X } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, NotebookText, Plus, Trash2, X } from "lucide-react";
 import { AppHeader } from "./AppHeader";
-
-type Holiday = {
-  id: string;
-  name: string;
-  date: string;
-  recurring: boolean;
-};
-
-type BusinessNote = {
-  id: string;
-  title: string;
-  category: string;
-  detail: string;
-};
+import { contextApi, type BusinessHoliday, type BusinessNote } from "../services/contextApi";
 
 const noteCategories = ["Regla interna", "Calendario", "Definición", "Excepción", "Otro"];
 
 export function BusinessContextDesk() {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [holidays, setHolidays] = useState<BusinessHoliday[]>([]);
   const [notes, setNotes] = useState<BusinessNote[]>([]);
   const [holidayOpen, setHolidayOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -32,41 +19,93 @@ export function BusinessContextDesk() {
   const [noteTitle, setNoteTitle] = useState("");
   const [noteCategory, setNoteCategory] = useState(noteCategories[0]);
   const [noteDetail, setNoteDetail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const addHoliday = (event: FormEvent) => {
+  useEffect(() => {
+    let cancelled = false;
+    contextApi
+      .load()
+      .then((payload) => {
+        if (cancelled) return;
+        setHolidays(payload.holidays);
+        setNotes(payload.notes);
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) setError(cause instanceof Error ? cause.message : "No pudimos cargar el contexto.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const addHoliday = async (event: FormEvent) => {
     event.preventDefault();
-    setHolidays((current) => [
-      ...current,
-      { id: nextItemId(), name: holidayName.trim(), date: holidayDate, recurring: holidayRecurring },
-    ]);
-    setHolidayName("");
-    setHolidayDate("");
-    setHolidayRecurring(true);
-    setHolidayOpen(false);
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await contextApi.addHoliday({
+        name: holidayName.trim(),
+        date: holidayDate,
+        recurring: holidayRecurring,
+      });
+      setHolidays((current) => [...current, created]);
+      setHolidayName("");
+      setHolidayDate("");
+      setHolidayRecurring(true);
+      setHolidayOpen(false);
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "No pudimos guardar el feriado.");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const addNote = (event: FormEvent) => {
+  const addNote = async (event: FormEvent) => {
     event.preventDefault();
-    setNotes((current) => [
-      ...current,
-      { id: nextItemId(), title: noteTitle.trim(), category: noteCategory, detail: noteDetail.trim() },
-    ]);
-    setNoteTitle("");
-    setNoteCategory(noteCategories[0]);
-    setNoteDetail("");
-    setNoteOpen(false);
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await contextApi.addNote({
+        title: noteTitle.trim(),
+        category: noteCategory,
+        detail: noteDetail.trim(),
+      });
+      setNotes((current) => [...current, created]);
+      setNoteTitle("");
+      setNoteCategory(noteCategories[0]);
+      setNoteDetail("");
+      setNoteOpen(false);
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "No pudimos guardar la información.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeHoliday = async (id: string) => {
+    setError(null);
+    try {
+      await contextApi.removeHoliday(id);
+      setHolidays((current) => current.filter((item) => item.id !== id));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "No pudimos eliminar el feriado.");
+    }
+  };
+
+  const removeNote = async (id: string) => {
+    setError(null);
+    try {
+      await contextApi.removeNote(id);
+      setNotes((current) => current.filter((item) => item.id !== id));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : "No pudimos eliminar la información.");
+    }
   };
 
   return (
     <main className="app-shell business-shell">
-      <AppHeader
-        currentStep={2}
-        extras={
-          <Link className="settings-header-link" href="/settings">
-            <Settings2 size={15} /> Configuración
-          </Link>
-        }
-      />
+      <AppHeader currentStep={2} />
 
       <section className="business-page">
         <header className="business-hero">
@@ -89,6 +128,8 @@ export function BusinessContextDesk() {
           </div>
           <Link href="/">Ir a Inferir <ArrowRight size={14} /></Link>
         </div>
+
+        {error ? <p className="form-error" role="alert">{error}</p> : null}
 
         <div className="business-grid">
           <section className="business-card">
@@ -125,7 +166,7 @@ export function BusinessContextDesk() {
                 </label>
                 <div className="business-form-actions">
                   <button type="button" className="ghost-button" onClick={() => setHolidayOpen(false)}>Cancelar</button>
-                  <button type="submit" className="primary-button">Añadir feriado</button>
+                  <button type="submit" className="primary-button" disabled={busy}>Añadir feriado</button>
                 </div>
               </form>
             ) : null}
@@ -142,7 +183,7 @@ export function BusinessContextDesk() {
                       <strong>{holiday.name}</strong>
                       <small>{formatHolidayDate(holiday.date)}{holiday.recurring ? " · Cada año" : ""}</small>
                     </div>
-                    <button type="button" onClick={() => setHolidays((current) => current.filter((item) => item.id !== holiday.id))} aria-label={`Eliminar ${holiday.name}`}>
+                    <button type="button" onClick={() => void removeHoliday(holiday.id)} aria-label={`Eliminar ${holiday.name}`}>
                       <Trash2 size={14} />
                     </button>
                   </li>
@@ -193,7 +234,7 @@ export function BusinessContextDesk() {
                 </label>
                 <div className="business-form-actions">
                   <button type="button" className="ghost-button" onClick={() => setNoteOpen(false)}>Cancelar</button>
-                  <button type="submit" className="primary-button">Añadir información</button>
+                  <button type="submit" className="primary-button" disabled={busy}>Añadir información</button>
                 </div>
               </form>
             ) : null}
@@ -207,7 +248,7 @@ export function BusinessContextDesk() {
                       <strong>{note.title}</strong>
                       <p>{note.detail}</p>
                     </div>
-                    <button type="button" onClick={() => setNotes((current) => current.filter((item) => item.id !== note.id))} aria-label={`Eliminar ${note.title}`}>
+                    <button type="button" onClick={() => void removeNote(note.id)} aria-label={`Eliminar ${note.title}`}>
                       <Trash2 size={14} />
                     </button>
                   </li>
@@ -227,12 +268,8 @@ export function BusinessContextDesk() {
   );
 }
 
-function nextItemId() {
-  return globalThis.crypto?.randomUUID?.() ?? `business-${Date.now()}-${Math.random()}`;
-}
-
 function asDate(value: string) {
-  return new Date(`${value}T12:00:00`);
+  return new Date(`${value.slice(0, 10)}T12:00:00`);
 }
 
 function formatHolidayDate(value: string) {

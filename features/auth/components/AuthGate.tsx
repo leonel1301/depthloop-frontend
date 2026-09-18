@@ -6,6 +6,7 @@ import { bindWorkspaceToBusiness } from "@/features/ontology-discovery/services/
 import { AuthContext } from "../hooks/useAuth";
 import { authApi } from "../services/authApi";
 import { clearSession, readSession, writeSession, type AuthSession } from "../services/sessionStore";
+import { OntologyProvider } from "@/features/ontology-discovery/hooks";
 import { AuthScreen } from "./AuthScreen";
 
 type Props = { children: ReactNode };
@@ -69,7 +70,13 @@ export function AuthGate({ children }: Props) {
   }
   if (!session) return <AuthScreen onAuthed={accept} />;
 
-  return <AuthContext.Provider value={{ session, logout, updateSession: accept }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ session, logout, updateSession: accept }}>
+      <OntologyProvider>
+        {children}
+      </OntologyProvider>
+    </AuthContext.Provider>
+  );
 }
 
 function syncBusiness(session: AuthSession) {

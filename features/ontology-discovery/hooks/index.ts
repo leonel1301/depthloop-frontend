@@ -1,2 +1,2 @@
-export { useOntologyDiscovery } from "./useOntologyDiscovery";
+export { useOntologyDiscovery, OntologyProvider } from "./useOntologyDiscovery";
 export { useConfirmations } from "./useConfirmations";
