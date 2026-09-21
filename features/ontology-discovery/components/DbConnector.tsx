@@ -2,59 +2,90 @@
 
 import { useState } from "react";
 import { Check, ChevronDown, Database, Eye, EyeOff, FileJson, LoaderCircle, LockKeyhole } from "lucide-react";
+import { useI18n, type MessageKey } from "@/features/i18n";
 import type { DbConnectionConfig, SchemaSnapshot, SourceKind } from "../models/ontology";
 import { EXAMPLE_SCHEMA_TEXT } from "../services/schemaExample";
 
 export type IntakeMode = "database" | "service" | "schema";
+export type ConnectionIntent = "connect" | "discover";
+
+type InitialConnection = {
+  host?: string;
+  port?: number;
+  user?: string;
+  database?: string;
+  serviceUrl?: string;
+  ssl?: boolean;
+  engine?: string;
+  kind?: SourceKind;
+};
 
 type Props = {
-  onSubmitConnection: (config: DbConnectionConfig, engine?: string) => Promise<void>;
+  onSubmitConnection: (config: DbConnectionConfig, engine: string | undefined, intent: ConnectionIntent) => Promise<void>;
   onSubmitSchema: (snapshot: SchemaSnapshot) => Promise<void>;
   isLoading: boolean;
   error: string | null;
   initialMode?: IntakeMode;
+  reconnect?: boolean;
+  initialConnection?: InitialConnection;
 };
 
-const engines = [
-  { value: "postgres", label: "PostgreSQL", mark: "Pg", hint: "Más habitual en analítica" },
-  { value: "mysql", label: "MySQL", mark: "My", hint: "Apps y CMS" },
-  { value: "sqlserver", label: "SQL Server", mark: "MS", hint: "Entornos corporativos" },
-];
-
-function parseSnapshot(raw: string): SchemaSnapshot {
+function parseSnapshot(raw: string, fail: (key: MessageKey) => string): SchemaSnapshot {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new Error("El JSON no es válido. Revisa comas y comillas.");
+    throw new Error(fail("connector.invalidJson"));
   }
-  if (!parsed || typeof parsed !== "object") throw new Error("El schema debe ser un objeto JSON.");
+  if (!parsed || typeof parsed !== "object") throw new Error(fail("connector.schemaObject"));
   const snapshot = parsed as SchemaSnapshot;
   if (!snapshot.source?.name || !snapshot.source?.engine) {
-    throw new Error("Falta source.name o source.engine.");
+    throw new Error(fail("connector.missingSource"));
   }
   if (!Array.isArray(snapshot.schemas) || snapshot.schemas.length === 0) {
-    throw new Error("El schema debe incluir al menos un namespace en schemas.");
+    throw new Error(fail("connector.missingSchemas"));
   }
   return snapshot;
 }
 
-export function DbConnector({ onSubmitConnection, onSubmitSchema, isLoading, error, initialMode = "schema" }: Props) {
-  const [mode, setMode] = useState<IntakeMode>(initialMode);
-  const [engine, setEngine] = useState("postgres");
+function engineValue(label?: string) {
+  const value = (label || "").toLowerCase();
+  if (value.includes("mysql")) return "mysql";
+  if (value.includes("sql server") || value.includes("mssql")) return "sqlserver";
+  return "postgres";
+}
+
+export function DbConnector({
+  onSubmitConnection,
+  onSubmitSchema,
+  isLoading,
+  error,
+  initialMode = "schema",
+  reconnect = false,
+  initialConnection,
+}: Props) {
+  const { t } = useI18n();
+  const engines = [
+    { value: "postgres", label: "PostgreSQL", mark: "Pg", hint: t("connector.pgHint") },
+    { value: "mysql", label: "MySQL", mark: "My", hint: t("connector.mysqlHint") },
+    { value: "sqlserver", label: "SQL Server", mark: "MS", hint: t("connector.mssqlHint") },
+  ];
+  const [mode, setMode] = useState<IntakeMode>(initialConnection?.kind === "service" ? "service" : initialMode);
+  const [engine, setEngine] = useState(engineValue(initialConnection?.engine));
   const [showPassword, setShowPassword] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [schemaText, setSchemaText] = useState(EXAMPLE_SCHEMA_TEXT);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [intent, setIntent] = useState<ConnectionIntent | "schema" | null>(null);
   const [form, setForm] = useState({
-    host: "",
-    port: "5432",
-    user: "",
+    host: initialConnection?.host ?? "",
+    port: String(initialConnection?.port ?? "5432"),
+    user: initialConnection?.user ?? "",
     password: "",
-    database: "postgres",
-    serviceUrl: "",
+    database: initialConnection?.database || "postgres",
+    serviceUrl: initialConnection?.serviceUrl ?? "",
     apiKey: "",
-    ssl: true,
+    ssl: initialConnection?.ssl ?? true,
   });
   const update = (key: "host" | "port" | "user" | "password" | "database" | "serviceUrl" | "apiKey", value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -67,46 +98,63 @@ export function DbConnector({ onSubmitConnection, onSubmitSchema, isLoading, err
     setLocalError(null);
   };
 
+  const submitConnection = async (nextIntent: ConnectionIntent) => {
+    setLocalError(null);
+    setIntent(nextIntent);
+    try {
+      await onSubmitConnection({
+        ...form,
+        port: Number(form.port),
+        kind: mode as SourceKind,
+        database: mode === "service" ? form.serviceUrl : form.database,
+        ssl: form.ssl,
+      }, selectedEngine.label, nextIntent);
+    } finally {
+      setIntent(null);
+    }
+  };
+
   return (
     <form
       className="connector-form"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
         setLocalError(null);
         if (mode === "schema") {
+          setIntent("schema");
           try {
-            void onSubmitSchema(parseSnapshot(schemaText));
+            await onSubmitSchema(parseSnapshot(schemaText, t));
           } catch (err) {
-            setLocalError(err instanceof Error ? err.message : "No pudimos leer el schema.");
+            setLocalError(err instanceof Error ? err.message : t("connector.schemaError"));
+          } finally {
+            setIntent(null);
           }
           return;
         }
-        void onSubmitConnection({
-          ...form,
-          port: Number(form.port),
-          kind: mode as SourceKind,
-          database: mode === "service" ? form.serviceUrl : form.database,
-          ssl: form.ssl,
-        }, selectedEngine.label);
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        const value = submitter instanceof HTMLButtonElement ? submitter.value : "";
+        await submitConnection(value === "discover" ? "discover" : "connect");
       }}
     >
-      <div className="segmented three" role="tablist" aria-label="Cómo entra la fuente">
-        <button type="button" role="tab" aria-selected={mode === "database"} className={mode === "database" ? "selected" : ""} onClick={() => { setMode("database"); setLocalError(null); }}>
-          <Database size={14} /> Base
-        </button>
-        <button type="button" role="tab" aria-selected={mode === "service"} className={mode === "service" ? "selected" : ""} onClick={() => { setMode("service"); setLocalError(null); }}>
-          API
-        </button>
-        <button type="button" role="tab" aria-selected={mode === "schema"} className={mode === "schema" ? "selected" : ""} onClick={() => { setMode("schema"); setLocalError(null); }}>
-          <FileJson size={14} /> Schema
-        </button>
-      </div>
+      {reconnect ? null : (
+        <div className="segmented three" role="tablist" aria-label={t("connector.how")}>
+          <button type="button" role="tab" aria-selected={mode === "database"} className={mode === "database" ? "selected" : ""} onClick={() => { setMode("database"); setLocalError(null); }}>
+            <Database size={14} /> {t("connector.base")}
+          </button>
+          <button type="button" role="tab" aria-selected={mode === "service"} className={mode === "service" ? "selected" : ""} onClick={() => { setMode("service"); setLocalError(null); }}>
+            API
+          </button>
+          <button type="button" role="tab" aria-selected={mode === "schema"} className={mode === "schema" ? "selected" : ""} onClick={() => { setMode("schema"); setLocalError(null); }}>
+            <FileJson size={14} /> Schema
+          </button>
+        </div>
+      )}
 
       {mode === "database" ? (
         <>
           <fieldset className="form-block">
-            <legend>Motor</legend>
-            <div className="engine-grid" role="radiogroup" aria-label="Motor de base de datos">
+            <legend>{t("connector.engine")}</legend>
+            <div className="engine-grid" role="radiogroup" aria-label={t("connector.engineGroup")}>
               {engines.map((item) => (
                 <button
                   key={item.value}
@@ -125,64 +173,64 @@ export function DbConnector({ onSubmitConnection, onSubmitSchema, isLoading, err
           </fieldset>
 
           <fieldset className="form-block">
-            <legend>Dónde está la base</legend>
+            <legend>{t("connector.where")}</legend>
             <div className="field-row host-row">
               <div className="field-grow">
                 <label htmlFor="host">Host</label>
                 <input id="host" value={form.host} onChange={(e) => update("host", e.target.value)} autoComplete="off" required={mode === "database"} placeholder="aws-1-us-west-1.pooler.supabase.com" />
               </div>
               <div className="field-port">
-                <label htmlFor="port">Puerto</label>
+                <label htmlFor="port">{t("sources.port")}</label>
                 <input id="port" inputMode="numeric" value={form.port} onChange={(e) => update("port", e.target.value)} required={mode === "database"} />
               </div>
             </div>
-            <label htmlFor="database">Nombre de la base</label>
+            <label htmlFor="database">{t("connector.dbName")}</label>
             <input id="database" value={form.database} onChange={(e) => update("database", e.target.value)} required={mode === "database"} />
             <label className="check-line">
               <input type="checkbox" checked={form.ssl} onChange={(event) => setForm((current) => ({ ...current, ssl: event.target.checked }))} />
-              SSL (requerido en Supabase)
+              {t("connector.ssl")}
             </label>
           </fieldset>
 
           <fieldset className="form-block">
-            <legend>Acceso de solo lectura</legend>
+            <legend>{t("connector.readAccess")}</legend>
             <div className="field-row">
               <div className="field-grow">
-                <label htmlFor="user">Usuario</label>
+                <label htmlFor="user">{t("sources.user")}</label>
                 <input id="user" value={form.user} onChange={(e) => update("user", e.target.value)} autoComplete="username" required={mode === "database"} placeholder="postgres.abcdxyz" />
               </div>
               <div className="field-grow">
-                <label htmlFor="password">Contraseña</label>
+                <label htmlFor="password">{t("connector.password")}</label>
                 <div className="password-field">
                   <input id="password" type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => update("password", e.target.value)} autoComplete="current-password" required={mode === "database"} />
-                  <button type="button" className="icon-button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+                  <button type="button" className="icon-button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>
                 </div>
               </div>
             </div>
           </fieldset>
-          <p className="security-note">Si el host es el pooler, el usuario es postgres.tu-project-ref, no solo postgres. Puerto 6543 (transaction) o 5432 (session).</p>
+          <p className="security-note">{t("connector.poolerNote")}</p>
         </>
       ) : null}
 
       {mode === "service" ? (
         <fieldset className="form-block">
-          <legend>Endpoint</legend>
-          <label htmlFor="serviceUrl">URL del servicio</label>
+          <legend>{t("connector.endpoint")}</legend>
+          <label htmlFor="serviceUrl">{t("connector.serviceUrl")}</label>
           <input id="serviceUrl" value={form.serviceUrl} onChange={(e) => update("serviceUrl", e.target.value)} placeholder="https://" required={mode === "service"} />
-          <label htmlFor="apiKey">Token o API key</label>
+          <label htmlFor="apiKey">{t("connector.apiKey")}</label>
           <div className="password-field">
             <input id="apiKey" type={showPassword ? "text" : "password"} value={form.apiKey} onChange={(e) => update("apiKey", e.target.value)} />
-            <button type="button" className="icon-button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar secreto" : "Mostrar secreto"}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+            <button type="button" className="icon-button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("connector.hideSecret") : t("connector.showSecret")}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>
           </div>
-          <p className="security-note">El conector de API aún no ejecuta consultas. Para Inferir usa una base PostgreSQL.</p>
+          <p className="security-note">{t("connector.apiNote")}</p>
         </fieldset>
       ) : null}
 
       {mode === "schema" ? (
         <fieldset className="form-block">
-          <legend>Snapshot del schema</legend>
-          <p className="section-copy">Es el JSON que recibe <code>POST /api/ontology/discover</code>: source, schemas, tablas, columnas y foreign keys. Sin filas.</p>
-          <label className="file-pick" htmlFor="schema-file">Cargar archivo .json</label>
+          <legend>{t("connector.snapshot")}</legend>
+          <p className="section-copy">{t("connector.snapshotCopy")}</p>
+          <label className="file-pick" htmlFor="schema-file">{t("connector.loadFile")}</label>
           <input id="schema-file" className="file-input" type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }} />
           <label htmlFor="schema-json">JSON</label>
           <textarea
@@ -198,15 +246,38 @@ export function DbConnector({ onSubmitConnection, onSubmitSchema, isLoading, err
 
       {mode !== "schema" ? (
         <>
-          <button type="button" className="advanced-toggle" onClick={() => setAdvanced((value) => !value)}><ChevronDown className={advanced ? "rotate" : ""} size={15} /> Opciones de conexión</button>
-          {advanced && <div className="advanced-box"><Check size={14} /> SSL activo · timeout 30 s · schema público · solo lectura</div>}
+          <button type="button" className="advanced-toggle" onClick={() => setAdvanced((value) => !value)}><ChevronDown className={advanced ? "rotate" : ""} size={15} /> {t("connector.options")}</button>
+          {advanced && <div className="advanced-box"><Check size={14} /> {t("connector.advanced")}</div>}
         </>
       ) : null}
       {visibleError ? <p className="form-error" role="alert">{visibleError}</p> : null}
-      <button className="primary-button" type="submit" disabled={isLoading}>
-        {isLoading ? <><LoaderCircle className="spin" size={17} /> Leyendo tablas…</> : mode === "schema" ? "Analizar schema" : "Conectar y leer tablas"}
-      </button>
-      <p className="security-note"><LockKeyhole size={14} /><span>Solo lectura. El API no guarda la contraseña; en el navegador dura esta sesión, para Inferir.</span></p>
+      {mode === "schema" ? (
+        <button className="primary-button" type="submit" disabled={isLoading}>
+          {isLoading ? <><LoaderCircle className="spin" size={17} /> {t("connector.reading")}</> : t("connector.analyze")}
+        </button>
+      ) : (
+        <div className="connector-actions">
+          <button
+            className={reconnect ? "primary-button" : "secondary-button"}
+            type="submit"
+            name="intent"
+            value="connect"
+            disabled={isLoading}
+          >
+            {isLoading && intent === "connect" ? <><LoaderCircle className="spin" size={17} /> {t("connector.connecting")}</> : reconnect ? t("sources.reconnect") : t("connector.connectOnly")}
+          </button>
+          <button
+            className={reconnect ? "secondary-button" : "primary-button"}
+            type="submit"
+            name="intent"
+            value="discover"
+            disabled={isLoading}
+          >
+            {isLoading && intent === "discover" ? <><LoaderCircle className="spin" size={17} /> {t("connector.generating")}</> : t("connector.connectAndMap")}
+          </button>
+        </div>
+      )}
+      <p className="security-note"><LockKeyhole size={14} /><span>{t("connector.readonly")}</span></p>
     </form>
   );
 }

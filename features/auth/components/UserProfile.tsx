@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { UserRound, X } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 import { useAuth } from "../hooks/useAuth";
 import { initials } from "../services/sessionStore";
 
 export function UserProfile({ compact = false }: { compact?: boolean }) {
   const { session, logout } = useAuth();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const role = session.user.role === "member" ? "Miembro" : "Propietario";
+  const role = session.user.role === "member" ? t("profile.member") : t("profile.owner");
 
   useEffect(() => {
     if (!open) return;
@@ -54,35 +56,35 @@ export function UserProfile({ compact = false }: { compact?: boolean }) {
               >
                 <div className="dialog-head">
                   <div>
-                    <h2 id="profile-dialog-title">Perfil</h2>
-                    <p className="section-copy">Datos de tu cuenta.</p>
+                    <h2 id="profile-dialog-title">{t("profile.title")}</h2>
+                    <p className="section-copy">{t("profile.copy")}</p>
                   </div>
                   <button
                     ref={closeRef}
                     type="button"
                     className="icon-tool"
                     onClick={() => setOpen(false)}
-                    aria-label="Cerrar"
+                    aria-label={t("common.close")}
                   >
                     <X size={16} />
                   </button>
                 </div>
                 <dl className="profile-details">
                   <div>
-                    <dt>Nombre</dt>
+                    <dt>{t("profile.name")}</dt>
                     <dd>{session.user.fullName}</dd>
                   </div>
                   <div>
-                    <dt>Correo</dt>
+                    <dt>{t("profile.email")}</dt>
                     <dd>{session.user.email}</dd>
                   </div>
                   <div>
-                    <dt>Rol</dt>
+                    <dt>{t("profile.role")}</dt>
                     <dd>{role}</dd>
                   </div>
                 </dl>
                 <button type="button" className="ghost-button company-logout" onClick={logout}>
-                  Cerrar sesión
+                  {t("profile.logout")}
                 </button>
               </div>
             </div>,

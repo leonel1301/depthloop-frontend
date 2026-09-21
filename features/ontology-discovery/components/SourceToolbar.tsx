@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Check, ChevronDown, Database, Plus, X } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 import { DbConnector } from "./DbConnector";
 import { SourceRoster } from "./SourceRoster";
 import { useOntologyDiscovery } from "../hooks/useOntologyDiscovery";
 
 export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
+  const { t } = useI18n();
   const {
     sources,
     querySources,
@@ -16,6 +18,7 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
     isLoading,
     error,
     sourceDialog,
+    reconnectSource,
     intakeMode,
     openSourceDialog,
     closeSourceDialog,
@@ -29,6 +32,7 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [connectedLabel, setConnectedLabel] = useState<string | null>(null);
+  const [connectedIntent, setConnectedIntent] = useState<"connect" | "discover">("discover");
   const closeRef = useRef<HTMLButtonElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
   const pills = querySources.length
@@ -92,7 +96,7 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
               className="source-switcher-toggle"
               aria-expanded={menuOpen}
               aria-haspopup="listbox"
-              aria-label="Seleccionar fuente"
+              aria-label={t("sources.select")}
               onClick={() => setMenuOpen((open) => !open)}
             >
               <span className="source-pills" aria-hidden="true">
@@ -110,9 +114,9 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
               <ChevronDown size={14} aria-hidden="true" />
             </button>
             {menuOpen ? (
-              <ul className="source-switcher-menu" role="listbox" aria-label="Fuentes">
+              <ul className="source-switcher-menu" role="listbox" aria-label={t("sources.list")}>
                 {pills.map((source) => (
-                  <li key={source.id}>
+                  <li key={source.id} className={source.live ? undefined : "has-reconnect"}>
                     <button
                       type="button"
                       role="option"
@@ -126,15 +130,28 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
                       <Database size={14} aria-hidden="true" />
                       <span>
                         <strong>{source.label}</strong>
-                        <small>{source.live ? "Sesión activa" : "Sin sesión"}</small>
+                        <small>{source.live ? t("sources.live") : t("sources.idle")}</small>
                       </span>
                       {source.id === activeSourceId ? <Check size={14} aria-hidden="true" /> : null}
                     </button>
+                    {source.live ? null : (
+                      <button
+                        type="button"
+                        className="source-switcher-reconnect"
+                        onClick={() => {
+                          const target = querySources.find((item) => item.id === source.id);
+                          setMenuOpen(false);
+                          if (target) openSourceDialog("reconnect", "database", target);
+                        }}
+                      >
+                        {t("sources.reconnect")}
+                      </button>
+                    )}
                   </li>
                 ))}
                 <li>
                   <button type="button" onClick={() => { setMenuOpen(false); openSourceDialog("manage"); }}>
-                    Administrar fuentes
+                    {t("sources.manage")}
                   </button>
                 </li>
               </ul>
@@ -145,8 +162,8 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
           type="button"
           className="icon-tool"
           onClick={() => openSourceDialog("add", "database")}
-          aria-label="Agregar fuente"
-          title="Agregar fuente"
+          aria-label={t("sources.add")}
+          title={t("sources.add")}
         >
           <Plus size={16} />
         </button>
@@ -158,34 +175,39 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
           <aside className="source-drawer" role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" onClick={(event) => event.stopPropagation()}>
             <div className="dialog-head">
               <div>
-                <h2 id="source-dialog-title">{connectedLabel ? "Fuente lista" : dialog === "add" ? "Agregar conexión" : "Administrar fuentes"}</h2>
+                <h2 id="source-dialog-title">{connectedLabel ? t("sources.ready") : dialog === "reconnect" ? t("sources.reconnectTitle") : dialog === "add" ? t("sources.addConnection") : t("sources.manage")}</h2>
                 <p className="section-copy">
                   {connectedLabel
-                    ? "La fuente ya está en este espacio. Puedes ir a setup para revisar el mapa, o seguir en esta pantalla."
-                    : "El schema arma el mapa. La conexión de base queda para que Inferir ejecute consultas de solo lectura. Las credenciales no se guardan en el API."}
+                    ? connectedIntent === "connect" ? t("sources.readySessionCopy") : t("sources.readyCopy")
+                    : dialog === "reconnect"
+                      ? t("sources.reconnectCopy")
+                      : dialog === "manage"
+                        ? t("sources.browserCopy")
+                        : t("sources.addCopy")}
                 </p>
               </div>
-              <button ref={closeRef} type="button" className="icon-tool" onClick={closeSourceDialog} aria-label="Cerrar"><X size={16} /></button>
+              <button ref={closeRef} type="button" className="icon-tool" onClick={closeSourceDialog} aria-label={t("common.close")}><X size={16} /></button>
             </div>
             <div className="drawer-body">
               {connectedLabel ? (
                 <div className="source-connected">
                   <p>{connectedLabel}</p>
                   <div className="source-connected-actions">
-                    <Link className="primary-button" href="/setup/map" onClick={closeSourceDialog}>Ir a setup</Link>
-                    <button type="button" className="secondary-button" onClick={closeSourceDialog}>Seguir aquí</button>
+                    <Link className="primary-button" href="/setup/map" onClick={closeSourceDialog}>{t("sources.goSetup")}</Link>
+                    <button type="button" className="secondary-button" onClick={closeSourceDialog}>{t("sources.stay")}</button>
                   </div>
                 </div>
               ) : (
                 <>
                   {dialog === "manage" ? (
                     <>
-                      {businessId ? <p className="muted-copy">Negocio {businessId}</p> : null}
+                      {businessId ? <p className="muted-copy">{t("sources.business", { id: businessId })}</p> : null}
                       {querySources.length ? (
                         <SourceRoster
                           sources={querySources}
                           liveIds={querySources.filter((source) => hasSession(source.id)).map((source) => source.id)}
                           onRemove={removeSource}
+                          onReconnect={(source) => openSourceDialog("reconnect", "database", source)}
                           compact
                         />
                       ) : sources.length ? (
@@ -195,39 +217,49 @@ export function SourceToolbar({ showChrome = true }: { showChrome?: boolean }) {
                               <div className="source-row-body">
                                 <div className="source-row-head">
                                   <h3>{source.label}</h3>
-                                  <span className="source-status">{source.kind === "schema" ? "Schema" : source.engine || "Fuente"}</span>
+                                  <span className="source-status">{source.kind === "schema" ? t("sources.schema") : source.engine || t("sources.source")}</span>
                                 </div>
                               </div>
                               <button
                                 type="button"
                                 className="ghost-button source-remove"
                                 onClick={() => removeSource(source.id)}
-                                aria-label={`Eliminar ${source.label}`}
+                                aria-label={t("sources.deleteNamed", { name: source.label })}
                               >
-                                Eliminar
+                                {t("common.delete")}
                               </button>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="muted-copy">Todavía no hay fuentes en este mapa.</p>
+                        <p className="muted-copy">{t("sources.empty")}</p>
                       )}
                     </>
                   ) : null}
+                  {dialog === "manage" ? null : (
                   <DbConnector
-                    key={intakeMode}
+                    key={reconnectSource?.id ?? intakeMode}
                     initialMode={intakeMode}
-                    onSubmitConnection={async (config, engine) => {
-                      const label = await discoverFromConnection(config, engine);
+                    reconnect={dialog === "reconnect"}
+                    initialConnection={reconnectSource ? {
+                      ...reconnectSource.config,
+                      engine: reconnectSource.engine,
+                      kind: reconnectSource.kind,
+                    } : undefined}
+                    onSubmitConnection={async (config, engine, intent) => {
+                      const label = await discoverFromConnection(config, engine, intent);
+                      setConnectedIntent(intent);
                       setConnectedLabel(label);
                     }}
                     onSubmitSchema={async (snapshot) => {
                       const label = await discoverFromSchema(snapshot);
+                      setConnectedIntent("discover");
                       setConnectedLabel(label);
                     }}
                     isLoading={isLoading}
                     error={error}
                   />
+                  )}
                 </>
               )}
             </div>

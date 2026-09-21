@@ -1,13 +1,15 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 import { useTheme } from "../hooks/useTheme";
 
 export function ThemePreference() {
   const { theme, setTheme } = useTheme();
+  const { t } = useI18n();
 
   return (
-    <div className="theme-choice" role="radiogroup" aria-label="Tema de la interfaz">
+    <div className="theme-choice" role="radiogroup" aria-label={t("theme.group")}>
       <button
         type="button"
         role="radio"
@@ -17,8 +19,8 @@ export function ThemePreference() {
       >
         <Sun size={16} aria-hidden="true" />
         <span>
-          <strong>Claro</strong>
-          <small>Fondo claro</small>
+          <strong>{t("theme.light")}</strong>
+          <small>{t("theme.lightHint")}</small>
         </span>
       </button>
       <button
@@ -30,8 +32,8 @@ export function ThemePreference() {
       >
         <Moon size={16} aria-hidden="true" />
         <span>
-          <strong>Oscuro</strong>
-          <small>Fondo oscuro</small>
+          <strong>{t("theme.dark")}</strong>
+          <small>{t("theme.darkHint")}</small>
         </span>
       </button>
     </div>

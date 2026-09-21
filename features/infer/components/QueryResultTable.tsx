@@ -2,10 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronDown, ChevronUp, Copy, Rows3 } from "lucide-react";
+import { useI18n, type MessageKey } from "@/features/i18n";
 import type { QueryTable } from "../../ontology-discovery/services/queryApi";
+import { ResultVisualization, isToolCompatible } from "@/features/tools/components/ResultVisualization";
+import { ToolIcon } from "@/features/tools/components/ToolIcon";
+import type { ToolId } from "@/features/tools/models";
 
 type Props = {
   table: QueryTable;
+  tools?: ToolId[];
+  preferredTools?: ToolId[];
 };
 
 function cell(value: string | number | boolean | null) {
@@ -14,19 +20,28 @@ function cell(value: string | number | boolean | null) {
   return String(value);
 }
 
-export function QueryResultTable({ table }: Props) {
+export function QueryResultTable({ table, tools = [], preferredTools = [] }: Props) {
+  const { t } = useI18n();
   const [sort, setSort] = useState<{ index: number; direction: "asc" | "desc" } | null>(null);
   const [visibleRows, setVisibleRows] = useState(8);
   const [copied, setCopied] = useState(false);
+  const [view, setView] = useState<"auto" | "table" | ToolId>("auto");
 
   const numericColumns = useMemo(
-    () => table.columns.map((_, index) => table.rows.some((row) => typeof row[index] === "number")),
+    () => table.columns.map((column, index) => !isIdentifierColumn(column) && table.rows.some((row) => isNumericValue(row[index]))),
     [table.columns, table.rows],
   );
   const rows = useMemo(() => {
     if (!sort) return table.rows;
     return [...table.rows].sort((a, b) => compareValues(a[sort.index], b[sort.index]) * (sort.direction === "asc" ? 1 : -1));
   }, [sort, table.rows]);
+
+  const automaticView = preferredTools.find((tool) => tools.includes(tool) && isToolCompatible(tool, table)) ?? "table";
+  const resolvedView = view === "auto"
+    ? automaticView
+    : view !== "table" && tools.includes(view) && isToolCompatible(view, table)
+      ? view
+      : "table";
 
   if (!table.columns.length) {
     return (
@@ -68,11 +83,34 @@ export function QueryResultTable({ table }: Props) {
         {table.truncated ? <span className="infer-table-badge">Resultado parcial</span> : null}
         <button type="button" className="infer-table-action" onClick={() => void copyTable()} aria-label="Copiar tabla">
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          <span>{copied ? "Copiada" : "Copiar CSV"}</span>
+          <span>{copied ? t("infer.copied") : t("infer.copyCsv")}</span>
         </button>
       </div>
 
-      <div className="infer-table-scroll" tabIndex={0} aria-label="Resultado de la consulta">
+      {tools.length ? (
+        <div className="infer-view-switcher" aria-label="Vistas del resultado">
+          <button type="button" className={resolvedView === "table" ? "is-active" : ""} onClick={() => setView("table")}>
+            <Rows3 size={13} /> {t("tools.tableView")}
+          </button>
+          {tools.map((tool) => {
+            const compatible = isToolCompatible(tool, table);
+            return (
+              <button
+                key={tool}
+                type="button"
+                className={resolvedView === tool ? "is-active" : ""}
+                disabled={!compatible}
+                title={compatible ? t(`tools.items.${tool}.summary` as MessageKey) : t("tools.noCompatibleData")}
+                onClick={() => setView(tool)}
+              >
+                <ToolIcon id={tool} size={13} /> {t(`tools.items.${tool}.name` as MessageKey)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {resolvedView !== "table" ? <ResultVisualization id={resolvedView} table={table} /> : <div className="infer-table-scroll" tabIndex={0} aria-label={t("infer.result")}>
         <table className="query-preview infer-result-table">
           <thead>
             <tr>
@@ -116,9 +154,9 @@ export function QueryResultTable({ table }: Props) {
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
 
-      {rows.length > 0 ? (
+      {resolvedView === "table" && rows.length > 0 ? (
         <div className="infer-table-footer">
           <span>Mostrando {Math.min(visibleRows, rows.length)} de {rows.length}</span>
           {remaining > 0 ? (
@@ -141,7 +179,17 @@ function compareValues(a: string | number | boolean | null, b: string | number |
   if (a == null) return 1;
   if (b == null) return -1;
   if (typeof a === "number" && typeof b === "number") return a - b;
+  if (isNumericValue(a) && isNumericValue(b)) return Number(String(a).replace(",", ".")) - Number(String(b).replace(",", "."));
   return String(a).localeCompare(String(b), "es", { numeric: true, sensitivity: "base" });
+}
+
+function isNumericValue(value: string | number | boolean | null) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return typeof value === "string" && /^-?\d+(?:[.,]\d+)?$/.test(value.trim());
+}
+
+function isIdentifierColumn(column: string) {
+  return /(^id$|_id$|uuid|email|correo|phone|tel[eé]fono|code|c[oó]digo|postal|zip|last.*digit|digit.*last|[uú]ltimos.*d[ií]gitos)/i.test(column);
 }
 
 function csvCell(value: string) {

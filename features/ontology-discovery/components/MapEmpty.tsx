@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, Database, ScanSearch, ShieldCheck } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 import { SourceRoster } from "./SourceRoster";
 import type { QuerySource } from "../services/workspaceStore";
 
@@ -10,23 +11,25 @@ type Props = {
   connections?: QuerySource[];
   liveIds?: string[];
   onRemove: (id: string) => void;
+  onReconnect?: (source: QuerySource) => void;
 };
 
-export function MapEmpty({ onConnect, onSchema, connections = [], liveIds = [], onRemove }: Props) {
+export function MapEmpty({ onConnect, onSchema, connections = [], liveIds = [], onRemove, onReconnect }: Props) {
+  const { t } = useI18n();
   return (
     <section className="map-empty">
-      <span className="map-empty-kicker"><ShieldCheck size={13} /> Tu capa de significado</span>
-      <h1>Convierte tus fuentes en un mapa que la empresa entiende.</h1>
-      <p>DepthLoop interpreta tablas, campos y relaciones. Tu equipo confirma lo importante y ese conocimiento se reutiliza en cada respuesta.</p>
+      <span className="map-empty-kicker"><ShieldCheck size={13} /> {t("mapEmpty.kicker")}</span>
+      <h1>{t("mapEmpty.title")}</h1>
+      <p>{t("mapEmpty.lead")}</p>
       <ol className="map-empty-journey">
-        <li><span><Database size={16} /></span><div><strong>Conecta</strong><small>Leemos la estructura sin modificar tus sistemas.</small></div></li>
-        <li><span><ScanSearch size={16} /></span><div><strong>Interpreta</strong><small>Traducimos la información a conceptos de negocio.</small></div></li>
-        <li><span><CheckCircle2 size={16} /></span><div><strong>Confirma</strong><small>Tu equipo decide qué significado queda en el mapa.</small></div></li>
+        <li><span><Database size={16} /></span><div><strong>{t("mapEmpty.connect")}</strong><small>{t("mapEmpty.connectHint")}</small></div></li>
+        <li><span><ScanSearch size={16} /></span><div><strong>{t("mapEmpty.interpret")}</strong><small>{t("mapEmpty.interpretHint")}</small></div></li>
+        <li><span><CheckCircle2 size={16} /></span><div><strong>{t("mapEmpty.confirm")}</strong><small>{t("mapEmpty.confirmHint")}</small></div></li>
       </ol>
-      <SourceRoster sources={connections} liveIds={liveIds} onRemove={onRemove} />
+      <SourceRoster sources={connections} liveIds={liveIds} onRemove={onRemove} onReconnect={onReconnect} />
       <div className="map-empty-actions">
-        <button type="button" className="primary-button" onClick={onConnect}>Conectar una fuente <ArrowRight size={15} /></button>
-        <button type="button" className="secondary-button" onClick={onSchema}>Usar un schema</button>
+        <button type="button" className="primary-button" onClick={onConnect}>{t("mapEmpty.connectSource")} <ArrowRight size={15} /></button>
+        <button type="button" className="secondary-button" onClick={onSchema}>{t("mapEmpty.useSchema")}</button>
       </div>
     </section>
   );

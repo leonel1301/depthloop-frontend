@@ -1,7 +1,10 @@
 import type { OntologyDiscoveryResult } from "../models/ontology";
 
 export const mockOntology: OntologyDiscoveryResult = {
+  status: "draft",
   id: "ont-retail-001",
+  sources: [],
+  canonicalConcepts: [],
   entities: [
     {
       id: "customers", name: "Customers", type: "table", confidence: 0.96,

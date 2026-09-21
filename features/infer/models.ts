@@ -1,3 +1,5 @@
+import type { ToolId } from "@/features/tools/models";
+
 export type InferMessage = {
   id: string;
   role: "user" | "assistant";
@@ -16,6 +18,7 @@ export type InferMessage = {
     error?: string | null;
   }>;
   pending?: boolean;
+  preferredTools?: ToolId[];
 };
 
 export type InferThread = {

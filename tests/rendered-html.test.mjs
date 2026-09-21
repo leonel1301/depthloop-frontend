@@ -1,11 +1,6 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
-
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -28,64 +23,76 @@ async function render() {
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
+test("server-renders the Nuudo authentication boot shell", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+  assert.match(html, /<title>Nuudo<\/title>/i);
+  assert.match(html, /class="auth-shell auth-booting"/);
+  assert.match(html, /aria-label="Cargando Nuudo"/);
+  assert.match(html, /src="\/nuudo-icon\.png"/);
+  assert.match(html, /class="auth-boot-line"/);
+  assert.doesNotMatch(html, /codex-preview|Your site is taking shape/i);
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
+test("keeps the authentication boot shell scoped to AuthGate", async () => {
+  const [authGate, css, page, layout] = await Promise.all([
+    readFile(new URL("../features/auth/components/AuthGate.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
   ]);
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
+  assert.match(authGate, /authApi\s*\.me\(local\.token\)/);
+  assert.match(authGate, /className="auth-shell auth-booting"/);
+  assert.match(authGate, /src="\/nuudo-icon\.png"/);
+  assert.match(authGate, /<AuthContext\.Provider/);
+  assert.match(css, /\.auth-shell\.auth-booting\s*\{/);
+  assert.match(css, /@keyframes auth-boot-pulse/);
+  assert.match(css, /@keyframes auth-boot-line/);
+  assert.match(page, /<InferApp\s*\/>/);
+  assert.match(layout, /const title = "Nuudo"/);
+  assert.match(layout, /<AuthGate>\{children\}<\/AuthGate>/);
+  assert.doesNotMatch(authGate, /_sites-preview|codex-preview/i);
+});
 
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
+test("keeps optional tools between Business and Infer and exposes them only in query results", async () => {
+  const [stepper, toolsPage, toolsDesk, resultTable, toolsApi] = await Promise.all([
+    readFile(new URL("../features/setup/components/SetupStepper.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/setup/tools/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/components/ToolsDesk.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/infer/components/QueryResultTable.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/services/toolsApi.ts", import.meta.url), "utf8"),
+  ]);
 
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
+  assert.ok(stepper.indexOf('href: "/setup/knowledge"') < stepper.indexOf('href: "/setup/tools"'));
+  assert.ok(stepper.indexOf('href: "/setup/tools"') < stepper.indexOf('href: "/setup/chat"'));
+  assert.match(toolsPage, /<ToolsDesk\s*\/>/);
+  assert.match(toolsDesk, /TOOL_CATALOG/);
+  assert.match(toolsDesk, /tools\.optional/);
+  assert.match(resultTable, /tools\.map/);
+  assert.match(resultTable, /isToolCompatible/);
+  assert.match(toolsApi, /\/api\/tools\/selection/);
+});
 
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+test("recommends enabled tools while composing and carries the choice into inference", async () => {
+  const [composer, recommendationHook, toolsApi, queryApi, resultTable, models] = await Promise.all([
+    readFile(new URL("../features/infer/components/InferChat.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/hooks/useToolRecommendations.ts", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/services/toolsApi.ts", import.meta.url), "utf8"),
+    readFile(new URL("../features/ontology-discovery/services/queryApi.ts", import.meta.url), "utf8"),
+    readFile(new URL("../features/infer/components/QueryResultTable.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/models.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(models, /"histogram"/);
+  assert.match(models, /"route-map"/);
+  assert.match(recommendationHook, /DEBOUNCE_MS/);
+  assert.match(toolsApi, /\/api\/tools\/recommend/);
+  assert.match(composer, /infer-tool-recommendations/);
+  assert.match(composer, /attachedTools/);
+  assert.match(queryApi, /preferredTools/);
+  assert.match(resultTable, /automaticView/);
 });

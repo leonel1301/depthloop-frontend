@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleCheckBig, ListChecks, PanelLeftClose, PanelLeftOpen, ScanSearch, Sparkles, Table2 } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 
 export type WorkspaceView = "structure" | "review";
 
@@ -15,21 +16,21 @@ type Props = {
   onToggle: () => void;
 };
 
-const items: Array<{ id: WorkspaceView; label: string; detail: string; icon: typeof Table2 }> = [
-  { id: "structure", label: "Estructura", detail: "Lo que entendimos", icon: ScanSearch },
-  { id: "review", label: "Revisión", detail: "Lo que debes confirmar", icon: ListChecks },
-];
-
 export function WorkspaceNav({ current, collapsed, pending, total, reviewed, confidence, onSelect, onToggle }: Props) {
+  const { t } = useI18n();
   const progress = total ? Math.round((reviewed / total) * 100) : 100;
+  const items: Array<{ id: WorkspaceView; label: string; detail: string; icon: typeof Table2 }> = [
+    { id: "structure", label: t("mapNav.structure"), detail: t("mapNav.structureDetail"), icon: ScanSearch },
+    { id: "review", label: t("mapNav.review"), detail: t("mapNav.reviewDetail"), icon: ListChecks },
+  ];
   return (
-    <aside className={`app-nav ${collapsed ? "collapsed" : ""}`} aria-label="Mapa">
+    <aside className={`app-nav ${collapsed ? "collapsed" : ""}`} aria-label={t("mapNav.label")}>
       <div className="infer-nav-brand">
         <span className="map-nav-mark" aria-hidden="true"><Sparkles size={15} /></span>
         {collapsed ? null : (
           <span className="map-nav-title">
-            <strong>Mapa semántico</strong>
-            <small>Interpretación confirmada</small>
+            <strong>{t("mapNav.title")}</strong>
+            <small>{t("mapNav.subtitle")}</small>
           </span>
         )}
         <button
@@ -37,8 +38,8 @@ export function WorkspaceNav({ current, collapsed, pending, total, reviewed, con
           className="icon-tool"
           onClick={onToggle}
           aria-expanded={!collapsed}
-          aria-label={collapsed ? "Mostrar panel" : "Ocultar panel"}
-          title={collapsed ? "Mostrar panel" : "Ocultar panel"}
+          aria-label={collapsed ? t("mapNav.show") : t("mapNav.hide")}
+          title={collapsed ? t("mapNav.show") : t("mapNav.hide")}
         >
           {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
@@ -53,7 +54,7 @@ export function WorkspaceNav({ current, collapsed, pending, total, reviewed, con
               className={`app-nav-item ${current === item.id ? "active" : ""}`}
               onClick={() => onSelect(item.id)}
               aria-current={current === item.id ? "page" : undefined}
-              aria-label={item.id === "review" && pending > 0 ? `${item.label}, ${pending} pendientes` : item.label}
+              aria-label={item.id === "review" && pending > 0 ? `${item.label}, ${t("mapNav.pending", { count: pending })}` : item.label}
               title={item.label}
             >
               <Icon size={16} aria-hidden="true" />
@@ -74,11 +75,11 @@ export function WorkspaceNav({ current, collapsed, pending, total, reviewed, con
         <div className="map-nav-proof">
           <div className="map-nav-proof-head">
             <CircleCheckBig size={15} />
-            <span>{pending ? `${pending} por confirmar` : "Mapa confirmado"}</span>
+            <span>{pending ? t("mapNav.pendingConfirm", { count: pending }) : t("mapNav.confirmed")}</span>
             <strong>{progress}%</strong>
           </div>
-          <div className="map-nav-progress" aria-label={`${progress}% revisado`}><i style={{ width: `${progress}%` }} /></div>
-          <p>{Math.round(confidence * 100)}% de lectura global · el negocio conserva el control.</p>
+          <div className="map-nav-progress" aria-label={t("mapNav.reviewed", { progress })}><i style={{ width: `${progress}%` }} /></div>
+          <p>{t("mapNav.reading", { percent: Math.round(confidence * 100) })}</p>
         </div>
       )}
     </aside>

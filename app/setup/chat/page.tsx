@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { InferenceOverview } from "@/features/setup/components/InferenceOverview";
 
-export default function LegacyChatPage() {
-  redirect("/");
+export default function InferencePage() {
+  return <InferenceOverview />;
 }

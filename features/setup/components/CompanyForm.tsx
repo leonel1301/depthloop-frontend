@@ -4,8 +4,10 @@ import { FormEvent, useState } from "react";
 import { COMPANY_SIZES, COUNTRIES, INDUSTRIES } from "@/features/auth/catalog";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { authApi } from "@/features/auth/services/authApi";
+import { countryLabel, industryLabel, sizeLabel, useI18n } from "@/features/i18n";
 
 export function CompanyForm() {
+  const { t, locale } = useI18n();
   const { session, updateSession } = useAuth();
   const business = session.business;
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +30,11 @@ export function CompanyForm() {
     setSaved(false);
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("El logo debe ser una imagen.");
+      setError(t("companyForm.logoImage"));
       return;
     }
     if (file.size > 280_000) {
-      setError("El logo debe pesar menos de 280 KB.");
+      setError(t("companyForm.logoSize"));
       return;
     }
     const reader = new FileReader();
@@ -64,7 +66,7 @@ export function CompanyForm() {
       updateSession(next);
       setSaved(true);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo guardar el negocio.");
+      setError(caught instanceof Error ? caught.message : t("companyForm.saveError"));
     } finally {
       setLoading(false);
     }
@@ -73,85 +75,85 @@ export function CompanyForm() {
   return (
     <form className="company-form" onSubmit={submit}>
       <label className="company-logo-field">
-        <span>Logo</span>
+        <span>{t("companyForm.logo")}</span>
         <span className="company-logo-preview">
           {logoUrl ? <img src={logoUrl} alt="" /> : <strong>{name.slice(0, 2).toUpperCase()}</strong>}
         </span>
         <span className="company-logo-pick">
           <input type="file" accept="image/*" onChange={(event) => onLogo(event.target.files?.[0])} />
-          {logoUrl ? "Cambiar imagen" : "Subir logo"}
+          {logoUrl ? t("companyForm.change") : t("companyForm.upload")}
         </span>
       </label>
       <div className="field-row">
         <label>
-          Nombre comercial
+          {t("companyForm.name")}
           <input value={name} onChange={(event) => setName(event.target.value)} required maxLength={160} />
         </label>
         <label>
-          Razón social
+          {t("companyForm.legalName")}
           <input value={legalName} onChange={(event) => setLegalName(event.target.value)} maxLength={160} />
         </label>
       </div>
       <label>
-        Actividad
+        {t("companyForm.activity")}
         <textarea value={activity} onChange={(event) => setActivity(event.target.value)} required maxLength={600} rows={3} />
       </label>
       <div className="field-row">
         <label>
-          Rubro
+          {t("companyForm.industry")}
           <select value={industry} onChange={(event) => setIndustry(event.target.value)}>
             {INDUSTRIES.map((item) => (
-              <option key={item} value={item}>{item}</option>
+              <option key={item} value={item}>{industryLabel(locale, item)}</option>
             ))}
           </select>
         </label>
         <label>
-          País
+          {t("companyForm.country")}
           <select value={country} onChange={(event) => setCountry(event.target.value)}>
             {COUNTRIES.map((item) => (
-              <option key={item} value={item}>{item}</option>
+              <option key={item} value={item}>{countryLabel(locale, item)}</option>
             ))}
           </select>
         </label>
       </div>
       <div className="field-row">
         <label>
-          Tamaño
+          {t("companyForm.size")}
           <select value={companySize} onChange={(event) => setCompanySize(event.target.value)}>
-            <option value="">Sin especificar</option>
+            <option value="">{t("companyForm.unspecified")}</option>
             {COMPANY_SIZES.map((item) => (
-              <option key={item} value={item}>{item} personas</option>
+              <option key={item} value={item}>{t("companyForm.people", { size: sizeLabel(locale, item) })}</option>
             ))}
           </select>
         </label>
         <label>
-          Ciudad
+          {t("companyForm.city")}
           <input value={city} onChange={(event) => setCity(event.target.value)} maxLength={80} />
         </label>
       </div>
       <div className="field-row">
         <label>
-          Sitio web
+          {t("companyForm.website")}
           <input value={website} onChange={(event) => setWebsite(event.target.value)} maxLength={300} placeholder="https://" />
         </label>
         <label>
-          Teléfono
+          {t("companyForm.phone")}
           <input value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={40} />
         </label>
       </div>
       <label>
-        Descripción
+        {t("companyForm.description")}
         <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} rows={4} />
       </label>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
-      {saved ? <p className="muted-copy">Cambios guardados.</p> : null}
+      {saved ? <p className="muted-copy">{t("companyForm.saved")}</p> : null}
       <div className="config-actions">
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? "Guardando…" : "Guardar negocio"}
+          {loading ? t("common.saving") : t("companyForm.save")}
         </button>
         {logoUrl ? (
           <button className="ghost-button" type="button" onClick={() => setLogoUrl("")}>
-            Quitar logo
+            {t("companyForm.remove")}
           </button>
         ) : null}
       </div>

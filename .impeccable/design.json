@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-17T04:15:00.000Z",
-  "title": "Design System: DepthLoop",
+  "title": "Design System: Nuudo",
   "extensions": {
     "colorMeta": {
       "corporate-blue": {
@@ -112,7 +112,7 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Page titles at 16px / 650; DepthLoop wordmark at 16px / 750."
+        "purpose": "Page titles at 16px / 650; Nuudo wordmark at 16px / 750."
       },
       "body": {
         "displayName": "Body",
@@ -269,7 +269,7 @@
   ],
   "narrative": {
     "northStar": "The Confirmed Ledger",
-    "overview": "DepthLoop's shipped Map is a dense corporate operations desk: sticky product chrome, source pills in the header, and two working panels where structure is listed and confirmations are decided in a table. The atmosphere is quiet, light, and exacting. Surfaces sit on cool slate paper with hairline borders. Corporate blue is the only action color; it marks the current step, primary buttons, selection, and focus. Teal, amber, and rose speak only as confidence and status.\n\nThe system is Inter at 13px, not a marketing site. Density is the point: a 56px sticky header, 64px panel heads, 26px stat chips, compact pills. Light on cool paper is the canonical theme. Dark is a paired night desk on the same geometry and type ramp, not a second identity.\n\nThe wordmark is DepthLoop at 16px / 750 beside the 30×30 `/depthloop-icon-v2.png` mark, clipped to 8px. New surfaces inherit this ledger, not a looser marketing layout.",
+    "overview": "Nuudo's shipped Map is a dense corporate operations desk: sticky product chrome, source pills in the header, and two working panels where structure is listed and confirmations are decided in a table. The atmosphere is quiet, light, and exacting. Surfaces sit on cool slate paper with hairline borders. Corporate blue is the only action color; it marks the current step, primary buttons, selection, and focus. Teal, amber, and rose speak only as confidence and status.\n\nThe system is Inter at 13px, not a marketing site. Density is the point: a 56px sticky header, 64px panel heads, 26px stat chips, compact pills. Light on cool paper is the canonical theme. Dark is a paired night desk on the same geometry and type ramp, not a second identity.\n\nThe wordmark is Nuudo at 16px / 750 beside the 30×30 `/nuudo-icon.png` mark, clipped to 8px. New surfaces inherit this ledger, not a looser marketing layout.",
     "keyCharacteristics": [
       "Cool slate paper with a single corporate-blue accent",
       "Inter at 13px with a tight 26 / 22 / 16 / 13 / 11 ramp",
@@ -315,7 +315,7 @@
       "Do set body at 13px Inter; page titles and the wordmark at 16px; concept names at 26px.",
       "Do use 7px radius on buttons, icon tools, and fields; 8px on workspace panels; 999px on pills and the stepper.",
       "Do mark selection with Corporate Blue Wash, not a heavy fill or a rest-surface drop shadow.",
-      "Do keep the wordmark DepthLoop at 16px / 750 beside `/depthloop-icon-v2.png` at 30×30, 8px."
+      "Do keep the wordmark Nuudo at 16px / 750 beside `/nuudo-icon.png` at 30×30, 8px."
     ],
     "donts": [
       "Don't use green (or any second hue) as the action accent. Corporate blue is the only accent; teal is confirmation status.",

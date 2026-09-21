@@ -1,5 +1,6 @@
+import { readSession } from "@/features/auth/services/sessionStore";
 import type { ConfirmationItem } from "../models/confirmation";
-import type { Attribute, Entity, OntologyDiscoveryResult, Relation, SchemaSnapshot } from "../models/ontology";
+import type { Attribute, CanonicalConcept, DriftReport, Entity, OntologyDiscoveryResult, OntologySource, Relation, SchemaSnapshot } from "../models/ontology";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -7,8 +8,12 @@ type ApiEntity = Entity & { technicalName?: string };
 type ApiDocument = {
   id: string;
   businessId?: string;
+  status: OntologyDiscoveryResult["status"];
   entities: ApiEntity[];
   relations: Relation[];
+  sources?: OntologySource[];
+  canonicalConcepts?: CanonicalConcept[];
+  drift?: DriftReport | null;
   metadata: OntologyDiscoveryResult["metadata"];
   source?: OntologyDiscoveryResult["source"];
 };
@@ -27,9 +32,18 @@ async function readError(response: Response): Promise<string> {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const token = readSession()?.token;
+  if (!token) throw new Error("Inicia sesión para acceder al Map.");
   let response: Response;
   try {
-    response = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...init?.headers } });
+    response = await fetch(url, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
   } catch {
     throw new Error("No pudimos hablar con el API. Confirma que el backend esté en el puerto 8000.");
   }
@@ -46,6 +60,7 @@ function mapDocument(document: ApiDocument): OntologyDiscoveryResult {
     foreignKey: relation.foreignKey,
     description: relation.description,
     confidence: relation.confidence,
+    review: relation.review,
   }));
   const entities: Entity[] = (document.entities ?? []).map((entity) => ({
     id: entity.id,
@@ -55,6 +70,7 @@ function mapDocument(document: ApiDocument): OntologyDiscoveryResult {
     type: entity.type,
     description: entity.description,
     confidence: entity.confidence,
+    review: entity.review,
     attributes: (entity.attributes ?? []).map((attribute: Attribute) => ({
       id: attribute.id,
       name: attribute.name,
@@ -64,14 +80,19 @@ function mapDocument(document: ApiDocument): OntologyDiscoveryResult {
       description: attribute.description,
       confidence: attribute.confidence,
       nullable: attribute.nullable,
+      review: attribute.review,
     })),
     relations: [],
   }));
   return {
     id: document.id,
     businessId: document.businessId,
+    status: document.status ?? "draft",
     entities,
     relations,
+    sources: document.sources ?? (document.source ? [document.source] : []),
+    canonicalConcepts: document.canonicalConcepts ?? [],
+    drift: document.drift ?? null,
     metadata: {
       analyzedAt: document.metadata.analyzedAt,
       totalConfidence: document.metadata.totalConfidence,
@@ -94,6 +115,15 @@ export const ontologyApi = {
       return null;
     }
   },
+  getPublished: async (businessId?: string) => {
+    const query = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
+    try {
+      const document = await request<ApiDocument>(`${API_URL}/api/ontology/published${query}`);
+      return mapDocument(document);
+    } catch {
+      return null;
+    }
+  },
   discoverFromSchema: async (snapshot: SchemaSnapshot) => {
     const document = await request<ApiDocument>(`${API_URL}/api/ontology/discover`, {
       method: "POST",
@@ -102,10 +132,21 @@ export const ontologyApi = {
     return mapDocument(document);
   },
   confirmOntology: (ontologyId: string, confirmations: ConfirmationItem[]) =>
-    request<{ saved: boolean }>(`${API_URL}/api/ontology/confirm`, {
+    request<{
+      saved: boolean;
+      status: OntologyDiscoveryResult["status"];
+      pendingConfirmations: number;
+    }>(`${API_URL}/api/ontology/confirm`, {
       method: "POST",
       body: JSON.stringify({ ontologyId, confirmations }),
     }),
+  publish: async (businessId: string, ontologyId: string) => {
+    const document = await request<ApiDocument>(`${API_URL}/api/ontology/publish`, {
+      method: "POST",
+      body: JSON.stringify({ businessId, ontologyId }),
+    });
+    return mapDocument(document);
+  },
   listVersions: async (businessId: string) => {
     try {
       return await request<Array<{
@@ -113,6 +154,7 @@ export const ontologyApi = {
         ontologyId: string;
         status: string;
         isCurrent: boolean;
+        isPublished: boolean;
         changeNote: string | null;
         createdAt: string;
       }>>(`${API_URL}/api/ontology/versions?businessId=${encodeURIComponent(businessId)}`);
@@ -126,5 +168,15 @@ export const ontologyApi = {
       body: JSON.stringify({ businessId, version }),
     });
     return mapDocument(document);
+  },
+  getDrift: (businessId?: string) => {
+    const query = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
+    return request<{
+      report: DriftReport | null;
+      impactedObjects: Array<{
+        id: string;
+        document: { kind: "metric" | "rule" | "definition"; key: string; name: string; conceptId?: string | null };
+      }>;
+    }>(`${API_URL}/api/ontology/drift${query}`);
   },
 };

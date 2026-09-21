@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/features/i18n";
 import { ontologyApi } from "@/features/ontology-discovery/services/ontologyApi";
 
 type Version = {
@@ -8,6 +9,7 @@ type Version = {
   ontologyId: string;
   status: string;
   isCurrent: boolean;
+  isPublished: boolean;
   changeNote: string | null;
   createdAt: string;
 };
@@ -18,6 +20,7 @@ type Props = {
 };
 
 export function MapHistory({ businessId, onRestored }: Props) {
+  const { t, locale } = useI18n();
   const [versions, setVersions] = useState<Version[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,14 +45,14 @@ export function MapHistory({ businessId, onRestored }: Props) {
       );
       onRestored(document);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo restaurar esa versión.");
+      setError(caught instanceof Error ? caught.message : t("history.restoreError"));
     } finally {
       setLoading(false);
     }
   };
 
   if (!versions.length) {
-    return <p className="muted-copy">Cuando confirmes un mapa, aquí quedará el historial para rollback.</p>;
+    return <p className="muted-copy">{t("history.empty")}</p>;
   }
 
   return (
@@ -60,12 +63,12 @@ export function MapHistory({ businessId, onRestored }: Props) {
           <li key={item.version}>
             <div>
               <strong>v{item.version}</strong>
-              <span>{item.isCurrent ? "Actual" : item.status}</span>
-              <small>{new Date(item.createdAt).toLocaleString("es")}</small>
+              <span>{item.isPublished ? t("history.published") : item.isCurrent ? t("history.draft") : item.status}</span>
+              <small>{new Date(item.createdAt).toLocaleString(locale === "en" ? "en" : "es")}</small>
             </div>
             {item.isCurrent ? null : (
               <button className="ghost-button" type="button" disabled={loading} onClick={() => void restore(item.version)}>
-                Restaurar
+                {t("history.restore")}
               </button>
             )}
           </li>

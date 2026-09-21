@@ -18,6 +18,10 @@ export type LoginPayload = {
   password: string;
 };
 
+export type UserUpdatePayload = {
+  language: "es" | "en";
+};
+
 export type BusinessUpdatePayload = {
   name?: string;
   legalName?: string | null;
@@ -68,6 +72,12 @@ export const authApi = {
     request("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
   updateBusiness: (token: string, payload: BusinessUpdatePayload) =>
     request("/api/auth/business", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    }),
+  updateMe: (token: string, payload: UserUpdatePayload) =>
+    request("/api/auth/me", {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),

@@ -3,7 +3,7 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ConfirmationItem } from "../models/confirmation";
 import type { ConnectedSource, DbConnectionConfig, OntologyDiscoveryResult, SchemaSnapshot } from "../models/ontology";
-import type { IntakeMode } from "../components/DbConnector";
+import type { IntakeMode, ConnectionIntent } from "../components/DbConnector";
 import { ontologyApi } from "../services/ontologyApi";
 import { queryApi } from "../services/queryApi";
 import { reviewsApi } from "../services/reviewsApi";
@@ -19,7 +19,7 @@ import {
   clearSecret,
 } from "../services/workspaceStore";
 
-type SourceDialog = "add" | "manage" | null;
+type SourceDialog = "add" | "manage" | "reconnect" | null;
 
 function toQuerySource(config: DbConnectionConfig, engine?: string): QuerySource {
   const id = `db-${config.host}-${config.database}-${config.user}`.toLowerCase();
@@ -46,9 +46,11 @@ function useOntologyWorkspace() {
   const [sources, setSources] = useState<ConnectedSource[]>([]);
   const [querySources, setQuerySources] = useState<QuerySource[]>([]);
   const [ontology, setOntology] = useState<OntologyDiscoveryResult | null>(null);
+  const [publishedOntology, setPublishedOntology] = useState<OntologyDiscoveryResult | null>(null);
   const [confirmations, setConfirmations] = useState<ConfirmationItem[]>([]);
   const [activeSourceId, setActiveSourceId] = useState("");
   const [sourceDialog, setSourceDialog] = useState<SourceDialog>(null);
+  const [reconnectSource, setReconnectSource] = useState<QuerySource | null>(null);
   const [intakeMode, setIntakeMode] = useState<IntakeMode>("database");
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
@@ -63,6 +65,7 @@ function useOntologyWorkspace() {
       try {
         let next = local.businessId || createBusinessId();
         let nextOntology = local.ontology;
+        let nextPublishedOntology = local.publishedOntology;
         let nextSources = local.sources;
         let nextQuery = local.querySources;
         const remoteSources = await listRemoteSources();
@@ -71,12 +74,17 @@ function useOntologyWorkspace() {
           nextQuery = remoteSources.map((source) => localById.get(source.id) ?? source);
         }
         let nextConfirmations = local.confirmations;
-        const remoteOntology = await ontologyApi.getCurrent(next);
+        const [remoteOntology, remotePublishedOntology] = await Promise.all([
+          ontologyApi.getCurrent(next),
+          ontologyApi.getPublished(next),
+        ]);
+        nextPublishedOntology = remotePublishedOntology;
         if (remoteOntology && (!remoteOntology.businessId || remoteOntology.businessId === next)) {
           nextOntology = remoteOntology;
           next = remoteOntology.businessId || next;
         } else if (nextOntology?.businessId && nextOntology.businessId !== next) {
           nextOntology = null;
+          nextPublishedOntology = null;
           nextSources = [];
           nextQuery = [];
           nextConfirmations = [];
@@ -100,6 +108,7 @@ function useOntologyWorkspace() {
           : nextQuery[0]?.id || nextSources[0]?.id || "";
         setBusinessId(next);
         setOntology(nextOntology);
+        setPublishedOntology(nextPublishedOntology);
         setSources(nextSources);
         setQuerySources(nextQuery);
         setConfirmations(nextConfirmations);
@@ -107,6 +116,7 @@ function useOntologyWorkspace() {
         writeWorkspace({
           businessId: next,
           ontology: nextOntology,
+          publishedOntology: nextPublishedOntology,
           sources: nextSources,
           querySources: nextQuery,
           confirmations: nextConfirmations,
@@ -121,8 +131,8 @@ function useOntologyWorkspace() {
 
   useEffect(() => {
     if (!ready || !businessId) return;
-    writeWorkspace({ businessId, ontology, sources, querySources, confirmations, activeSourceId });
-  }, [ready, businessId, ontology, sources, querySources, confirmations, activeSourceId]);
+    writeWorkspace({ businessId, ontology, publishedOntology, sources, querySources, confirmations, activeSourceId });
+  }, [ready, businessId, ontology, publishedOntology, sources, querySources, confirmations, activeSourceId]);
 
   useEffect(() => {
     if (!ready || !ontology?.id) return;
@@ -132,14 +142,17 @@ function useOntologyWorkspace() {
     return () => window.clearTimeout(timer);
   }, [ready, ontology?.id, confirmations]);
 
-  const openSourceDialog = useCallback((mode: Exclude<SourceDialog, null>, intake: IntakeMode = "database") => {
+  const openSourceDialog = useCallback((mode: Exclude<SourceDialog, null>, intake: IntakeMode = "database", source?: QuerySource) => {
     setError(null);
-    setIntakeMode(intake);
+    const kind = source?.kind;
+    setIntakeMode(kind === "service" || kind === "schema" ? kind : intake);
+    setReconnectSource(mode === "reconnect" ? source ?? null : null);
     setSourceDialog(mode);
   }, []);
 
   const closeSourceDialog = useCallback(() => {
     setSourceDialog(null);
+    setReconnectSource(null);
     setError(null);
   }, []);
 
@@ -183,7 +196,7 @@ function useOntologyWorkspace() {
     }
   };
 
-  const discoverFromConnection = async (config: DbConnectionConfig, engine?: string) => {
+  const discoverFromConnection = async (config: DbConnectionConfig, engine?: string, intent: ConnectionIntent = "discover") => {
     setIsLoading(true);
     setError(null);
     try {
@@ -191,13 +204,13 @@ function useOntologyWorkspace() {
         throw new Error("El conector de API aún no ejecuta consultas. Usa una base PostgreSQL para Inferir.");
       }
       const querySource = toQuerySource(config, engine);
-      await queryApi.run(config, "select current_database() as database, current_user as db_user", businessId);
+      await upsertRemoteSource(querySource);
+      await queryApi.run(config, "select current_database() as database, current_user as db_user", querySource.id, businessId);
       writeSecret(querySource.id, { password: config.password, apiKey: config.apiKey });
       setQuerySources((current) => {
         const exists = current.some((source) => source.id === querySource.id);
         return exists ? current.map((source) => (source.id === querySource.id ? querySource : source)) : [...current, querySource];
       });
-      void upsertRemoteSource(querySource);
       const next: ConnectedSource = {
         id: querySource.id,
         kind: "database",
@@ -210,7 +223,8 @@ function useOntologyWorkspace() {
         return exists ? current.map((source) => (source.id === next.id ? next : source)) : [...current, next];
       });
       setActiveSourceId(querySource.id);
-      const snapshot = await queryApi.introspect(config, businessId);
+      if (intent === "connect") return querySource.label;
+      const snapshot = await queryApi.introspect(config, querySource.id, businessId);
       const result = await ontologyApi.discoverFromSchema({
         ...snapshot,
         source: { ...snapshot.source, businessId },
@@ -250,6 +264,7 @@ function useOntologyWorkspace() {
     discoverFromConnection,
     removeSource,
     ontology,
+    publishedOntology,
     isLoading,
     error,
     sources,
@@ -257,12 +272,14 @@ function useOntologyWorkspace() {
     confirmations,
     setConfirmations,
     setOntology,
+    setPublishedOntology,
     connectionForQuery,
     hasSession: (sourceId: string) => Boolean(readSecrets()[sourceId]?.password),
     activeSourceId: activeSource?.id ?? "",
     setActiveSourceId,
     activeSource,
     sourceDialog,
+    reconnectSource,
     intakeMode,
     openSourceDialog,
     closeSourceDialog,

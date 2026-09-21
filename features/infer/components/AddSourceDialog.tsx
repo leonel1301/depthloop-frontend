@@ -4,15 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 
 export type SourceKindChoice = "database" | "excel" | "service" | "schema";
-
-const options: Array<{ id: SourceKindChoice; label: string; detail: string; intake: "database" | "service" | "schema" }> = [
-  { id: "database", label: "Base de datos", detail: "PostgreSQL, MySQL o SQL Server, en solo lectura.", intake: "database" },
-  { id: "excel", label: "Excel", detail: "Incorpora la estructura de una hoja de cálculo.", intake: "schema" },
-  { id: "service", label: "API", detail: "Conecta un servicio web durante esta sesión.", intake: "service" },
-  { id: "schema", label: "Archivo JSON", detail: "Carga una estructura sin conectar la base de datos.", intake: "schema" },
-];
 
 type Props = {
   open: boolean;
@@ -20,6 +14,7 @@ type Props = {
 };
 
 export function AddSourceDialog({ open, onClose }: Props) {
+  const { t } = useI18n();
   const [kind, setKind] = useState<SourceKindChoice>("database");
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -35,6 +30,13 @@ export function AddSourceDialog({ open, onClose }: Props) {
 
   if (!open || typeof document === "undefined") return null;
 
+  const options: Array<{ id: SourceKindChoice; label: string; detail: string; intake: "database" | "service" | "schema" }> = [
+    { id: "database", label: t("sources.database"), detail: t("sources.databaseDetail"), intake: "database" },
+    { id: "excel", label: t("sources.excel"), detail: t("sources.excelDetail"), intake: "schema" },
+    { id: "service", label: t("sources.api"), detail: t("sources.apiDetail"), intake: "service" },
+    { id: "schema", label: t("sources.json"), detail: t("sources.jsonDetail"), intake: "schema" },
+  ];
+
   const selected = options.find((item) => item.id === kind) ?? options[0];
 
   return createPortal(
@@ -48,10 +50,10 @@ export function AddSourceDialog({ open, onClose }: Props) {
       >
         <div className="dialog-head">
           <div>
-            <h2 id="add-source-title">Añadir fuente</h2>
+            <h2 id="add-source-title">{t("infer.addSource")}</h2>
             <p className="section-copy">Elige qué tipo de información quieres conectar.</p>
           </div>
-          <button ref={closeRef} type="button" className="icon-tool" onClick={onClose} aria-label="Cerrar">
+          <button ref={closeRef} type="button" className="icon-tool" onClick={onClose} aria-label={t("common.close")}>
             <X size={16} />
           </button>
         </div>
@@ -72,7 +74,7 @@ export function AddSourceDialog({ open, onClose }: Props) {
         </ul>
         <div className="add-source-actions">
           <Link className="primary-button" href={`/setup/map?intake=${selected.intake}`} onClick={onClose}>
-            Continuar
+            {t("auth.continue")}
           </Link>
         </div>
       </div>

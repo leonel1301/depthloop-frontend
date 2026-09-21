@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { queryApi, type InferHistoryTurn, type InferStep } from "@/features/ontology-discovery/services/queryApi";
+import {
+  MAX_INFER_HISTORY_TURNS,
+  queryApi,
+  type InferHistoryTurn,
+  type InferStep,
+} from "@/features/ontology-discovery/services/queryApi";
 import type { DbConnectionConfig } from "@/features/ontology-discovery/models/ontology";
 import type { InferMessage, InferThread } from "../models";
+import type { ToolId } from "@/features/tools/models";
 import { chatsApi } from "../services/chatsApi";
 import {
   clearLocalThreads,
@@ -105,13 +111,16 @@ export function useInferChat() {
   const send = async (
     question: string,
     connection: DbConnectionConfig,
+    sourceId: string,
     businessId?: string,
+    preferredTools: ToolId[] = [],
   ) => {
-    const user: InferMessage = { id: nextId(), role: "user", text: question };
-    const pending: InferMessage = { id: nextId(), role: "assistant", text: "", pending: true };
+    const user: InferMessage = { id: nextId(), role: "user", text: question, preferredTools };
+    const pending: InferMessage = { id: nextId(), role: "assistant", text: "", pending: true, preferredTools };
     const history: InferHistoryTurn[] = persistableMessages(messages)
       .map((message) => ({ role: message.role, text: message.text }))
-      .filter((turn) => turn.text.trim());
+      .filter((turn) => turn.text.trim())
+      .slice(-MAX_INFER_HISTORY_TURNS);
     setError(null);
     setLoading(true);
     updateActive((thread) => {
@@ -124,7 +133,7 @@ export function useInferChat() {
       };
     });
     try {
-      const result = await queryApi.ask(connection, question, { businessId, history });
+      const result = await queryApi.ask(connection, question, { sourceId, businessId, history, preferredTools });
       const steps: InferStep[] = result.steps ?? [];
       let saved: InferThread | null = null;
       updateActive((thread) => {

@@ -4,6 +4,7 @@ export type AuthUser = {
   fullName: string;
   authProvider: "jwt" | "firebase";
   role?: "owner" | "member";
+  language?: "es" | "en";
 };
 
 export type AuthBusiness = {

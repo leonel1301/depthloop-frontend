@@ -81,7 +81,7 @@ export function conceptSingular(id: string, fallback?: string) {
 }
 
 export function conceptStory(id: string, fieldCount: number) {
-  return conceptStories[conceptKey(id)] || `Agrupa ${fieldCount} ${fieldCount === 1 ? "dato" : "datos"} de negocio que DepthLoop encontró en esta fuente.`;
+  return conceptStories[conceptKey(id)] || `Agrupa ${fieldCount} ${fieldCount === 1 ? "dato" : "datos"} de negocio que Nuudo encontró en esta fuente.`;
 }
 
 export function fieldLabel(name: string) {

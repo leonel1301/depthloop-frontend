@@ -1,12 +1,14 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { useI18n } from "@/features/i18n";
 import type { QuerySource } from "../services/workspaceStore";
 
 type Props = {
   sources: QuerySource[];
   liveIds?: string[];
   onRemove: (id: string) => void;
+  onReconnect?: (source: QuerySource) => void;
   compact?: boolean;
 };
 
@@ -17,15 +19,16 @@ function engineMark(engine?: string) {
   return "Pg";
 }
 
-export function SourceRoster({ sources, liveIds = [], onRemove, compact = false }: Props) {
+export function SourceRoster({ sources, liveIds = [], onRemove, onReconnect, compact = false }: Props) {
+  const { t } = useI18n();
   if (!sources.length) return null;
 
   return (
     <div className={`source-roster${compact ? " compact" : ""}`}>
       {compact ? null : (
         <>
-          <h2>Fuentes en este navegador</h2>
-          <p className="muted-copy">Se guardan aquí, no en tu base. Eliminar solo las quita de este equipo.</p>
+          <h2>{t("sources.browserTitle")}</h2>
+          <p className="muted-copy">{t("sources.browserCopy")}</p>
         </>
       )}
       <ul>
@@ -40,33 +43,44 @@ export function SourceRoster({ sources, liveIds = [], onRemove, compact = false 
                 <div className="source-row-head">
                   <h3>{database}</h3>
                   <span className={`source-status${live ? " live" : ""}`}>
-                    {live ? "Lista para Inferir" : "Sin sesión"}
+                    {live ? t("sources.readyInfer") : t("sources.idle")}
                   </span>
                 </div>
                 <dl>
                   <div>
-                    <dt>Host</dt>
+                    <dt>{t("sources.host")}</dt>
                     <dd title={host || undefined}>{host || "—"}</dd>
                   </div>
                   <div>
-                    <dt>Usuario</dt>
+                    <dt>{t("sources.user")}</dt>
                     <dd title={source.config.user || undefined}>{source.config.user || "—"}</dd>
                   </div>
                   <div>
-                    <dt>Puerto</dt>
+                    <dt>{t("sources.port")}</dt>
                     <dd>{source.config.port ?? "—"}{source.config.ssl ? " · SSL" : ""}</dd>
                   </div>
                 </dl>
               </div>
-              <button
-                type="button"
-                className="ghost-button source-remove"
-                onClick={() => onRemove(source.id)}
-                aria-label={`Eliminar ${database}`}
-              >
-                <Trash2 size={14} />
-                Eliminar
-              </button>
+              <div className="source-row-actions">
+                {!live && onReconnect ? (
+                  <button
+                    type="button"
+                    className="secondary-button source-reconnect"
+                    onClick={() => onReconnect(source)}
+                  >
+                    {t("sources.reconnect")}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="ghost-button source-remove"
+                  onClick={() => onRemove(source.id)}
+                  aria-label={`${t("common.delete")} ${database}`}
+                >
+                  <Trash2 size={14} />
+                  {t("common.delete")}
+                </button>
+              </div>
             </li>
           );
         })}

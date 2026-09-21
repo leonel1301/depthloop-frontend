@@ -1,17 +1,22 @@
+"use client";
+
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { useI18n } from "@/features/i18n";
 
-const steps = [
-  { id: 1, href: "/setup/map", label: "Map" },
-  { id: 2, href: "/setup/knowledge", label: "Negocio" },
-  { id: 3, href: "/", label: "Inferencia" },
-] as const;
-
-type Props = { current: 1 | 2 | 3 };
+type Props = { current: 1 | 2 | 3 | 4 };
 
 export function SetupStepper({ current }: Props) {
+  const { t } = useI18n();
+  const steps = [
+    { id: 1, href: "/setup/map", label: t("stepper.map") },
+    { id: 2, href: "/setup/knowledge", label: t("stepper.business") },
+    { id: 3, href: "/setup/tools", label: t("stepper.tools") },
+    { id: 4, href: "/setup/chat", label: t("stepper.infer") },
+  ] as const;
+
   return (
-    <ol className="setup-stepper" aria-label="Pasos de configuración">
+    <ol className="setup-stepper" aria-label={t("stepper.label")}>
       {steps.map((step, index) => {
         const state = step.id < current ? "done" : step.id === current ? "current" : "upcoming";
         return (
@@ -20,7 +25,7 @@ export function SetupStepper({ current }: Props) {
             <Link
               href={step.href}
               className="setup-step-link"
-              aria-label={`${step.label}${state === "current" ? ", paso actual" : state === "done" ? ", completado" : ""}`}
+              aria-label={`${step.label}${state === "current" ? `, ${t("stepper.current")}` : state === "done" ? `, ${t("stepper.done")}` : ""}`}
               aria-current={state === "current" ? "step" : undefined}
               title={step.label}
             >

@@ -29,12 +29,16 @@ export async function listRemoteSources(): Promise<QuerySource[]> {
 
 export async function upsertRemoteSource(source: QuerySource) {
   const token = readSession()?.token;
-  if (!token) return;
-  await fetch(`${API_URL}/api/sources`, {
+  if (!token) throw new Error("Inicia sesión para guardar la fuente.");
+  const response = await fetch(`${API_URL}/api/sources`, {
     method: "PUT",
     headers: authHeaders(),
     body: JSON.stringify(source),
-  }).catch(() => undefined);
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { detail?: unknown } | null;
+    throw new Error(typeof payload?.detail === "string" ? payload.detail : "No pudimos guardar la fuente.");
+  }
 }
 
 export async function deleteRemoteSource(sourceId: string) {

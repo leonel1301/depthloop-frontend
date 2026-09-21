@@ -15,6 +15,7 @@ export type QuerySource = {
 export type WorkspaceSnapshot = {
   businessId: string;
   ontology: OntologyDiscoveryResult | null;
+  publishedOntology: OntologyDiscoveryResult | null;
   sources: ConnectedSource[];
   querySources: QuerySource[];
   confirmations: ConfirmationItem[];
@@ -38,6 +39,7 @@ export function readWorkspace(): WorkspaceSnapshot {
   const fallback: WorkspaceSnapshot = {
     businessId: createBusinessId(),
     ontology: null,
+    publishedOntology: null,
     sources: [],
     querySources: [],
     confirmations: [],
@@ -50,7 +52,10 @@ export function readWorkspace(): WorkspaceSnapshot {
     const parsed = JSON.parse(raw) as Partial<WorkspaceSnapshot>;
     return {
       businessId: parsed.businessId || fallback.businessId,
-      ontology: parsed.ontology ?? null,
+      ontology: parsed.ontology ? { ...parsed.ontology, status: parsed.ontology.status ?? "draft" } : null,
+      publishedOntology: parsed.publishedOntology
+        ? { ...parsed.publishedOntology, status: "published" }
+        : null,
       sources: parsed.sources ?? [],
       querySources: parsed.querySources ?? [],
       confirmations: parsed.confirmations ?? [],
@@ -76,7 +81,7 @@ export function bindWorkspaceToBusiness(businessId: string): WorkspaceSnapshot {
   const owned = current.ontology?.businessId === businessId;
   const next: WorkspaceSnapshot = owned
     ? { ...current, businessId }
-    : { businessId, ontology: null, sources: [], querySources: [], confirmations: [], activeSourceId: undefined };
+    : { businessId, ontology: null, publishedOntology: null, sources: [], querySources: [], confirmations: [], activeSourceId: undefined };
   writeWorkspace(next);
   return next;
 }

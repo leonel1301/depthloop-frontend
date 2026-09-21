@@ -10,12 +10,15 @@ function tableRef(entity: { schema?: string; technicalName?: string; name: strin
   return entity.schema ? `${entity.schema}.${table}` : table;
 }
 
+function reviewStatus(status?: "suggested" | "confirmed" | "rejected"): ConfirmationStatus {
+  return status === "confirmed" || status === "rejected" ? status : "pending";
+}
+
 function deriveItems(ontology: OntologyDiscoveryResult | null): ConfirmationItem[] {
   if (!ontology) return [];
-  const threshold = ontology.metadata.confidenceThreshold ?? 0.9;
   const names = Object.fromEntries(ontology.entities.map((entity) => [entity.id, entity.name]));
   const tables = Object.fromEntries(ontology.entities.map((entity) => [entity.id, tableRef(entity)]));
-  const entities = ontology.entities.filter((e) => e.confidence < threshold).map((e) => ({
+  const entities = ontology.entities.map((e) => ({
     itemId: e.id, entityId: e.id, itemType: "entity" as const,
     suggestion: {
       name: e.name,
@@ -24,9 +27,9 @@ function deriveItems(ontology: OntologyDiscoveryResult | null): ConfirmationItem
       context: `Tabla ${e.technicalName || e.name} · ${e.attributes.length} campos`,
       table: tableRef(e),
     },
-    status: "pending" as const,
+    status: reviewStatus(e.review?.status),
   }));
-  const attributes = ontology.entities.flatMap((e) => e.attributes.filter((a) => a.confidence < threshold).map((a) => ({
+  const attributes = ontology.entities.flatMap((e) => e.attributes.map((a) => ({
     itemId: a.id, entityId: e.id, itemType: "attribute" as const,
     suggestion: {
       name: a.name,
@@ -36,9 +39,9 @@ function deriveItems(ontology: OntologyDiscoveryResult | null): ConfirmationItem
       table: tableRef(e),
       column: a.technicalName || a.name,
     },
-    status: "pending" as const,
+    status: reviewStatus(a.review?.status),
   })));
-  const relations = ontology.relations.filter((r) => r.confidence < threshold).map((r) => ({
+  const relations = ontology.relations.map((r) => ({
     itemId: r.id, entityId: r.from, itemType: "relation" as const,
     suggestion: {
       name: `${names[r.from] || r.from} → ${names[r.to] || r.to}`,
@@ -48,7 +51,7 @@ function deriveItems(ontology: OntologyDiscoveryResult | null): ConfirmationItem
       table: tables[r.from],
       column: r.foreignKey || undefined,
     },
-    status: "pending" as const,
+    status: reviewStatus(r.review?.status),
   }));
   return [...entities, ...attributes, ...relations];
 }

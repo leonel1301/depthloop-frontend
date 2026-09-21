@@ -12,7 +12,7 @@ Personas de negocio (finanzas, operaciones, producto, dirección). Entran cuando
 
 ## Product Purpose
 
-DepthLoop hace posible que una empresa tenga un mapa confirmado de **toda** su data (bases, APIs y servicios), no de una sola base. El trabajo actual del producto es armar y confirmar ese mapa. Preguntar e interpretar viene después, cuando el mapa ya existe.
+Nuudo hace posible que una empresa tenga un mapa confirmado de **toda** su data (bases, APIs y servicios), no de una sola base. El trabajo actual del producto es armar y confirmar ese mapa. Preguntar e interpretar viene después, cuando el mapa ya existe.
 
 Éxito: un no-técnico puede ver la data de la empresa en conceptos de negocio y confirmar lo dudoso, sin modelar tablas a mano.
 
@@ -42,12 +42,12 @@ Abierto: tamaño de empresa, idiomas además de español, y si Inferir será el 
 
 ## Brand Commitments
 
-Nombre **DepthLoop**. Wordmark e icono (`/depthloop-icon-v2.png`). Pasos nombrados Map → Negocio → Inferir. Voz de producto en español, directa, corporativa.
+Nombre **Nuudo**. Wordmark e icono (`/nuudo-icon.png`). Pasos nombrados Map → Negocio → Inferir. Voz de producto en español, directa, corporativa.
 
 ## Evidence on Hand
 
 - Demo mock: ontología retail (`features/ontology-discovery/services/mockOntology.ts`), no datos de clientes reales.
-- Activos: `/depthloop-icon-v2.png`, `/og.png`.
+- Activos: `/nuudo-icon.png`, `/nuudo-favicon.png`, `/nuudo-apple-icon.png`, `/nuudo-social.png`.
 
 No hay testimonios, benchmarks, clientes ni métricas reales. El trabajo futuro no debe inventarlos.
 
@@ -56,5 +56,5 @@ No hay testimonios, benchmarks, clientes ni métricas reales. El trabajo futuro 
 - Primero el mapa: negocio confirma significado antes de preguntar.
 - Toda la data de la empresa, no una base aislada.
 - Inferir nunca es una caja negra: cada consulta se ve en lenguaje natural y en tabla.
-- Solo lectura: DepthLoop no escribe en los sistemas del cliente ni guarda secretos.
+- Solo lectura: Nuudo no escribe en los sistemas del cliente ni guarda secretos.
 - El usuario de negocio es quien valida; IT habilita, no traduce en Slack.

@@ -5,14 +5,20 @@ import { AppHeader } from "@/features/setup/components/AppHeader";
 import { ConfirmationPanel, MapEmpty, UnderstandingCatalog, WorkspaceNav } from "@/features/ontology-discovery/components";
 import type { WorkspaceView } from "@/features/ontology-discovery/components/WorkspaceNav";
 import { useConfirmations, useOntologyDiscovery } from "@/features/ontology-discovery/hooks";
+import { ontologyApi } from "@/features/ontology-discovery/services/ontologyApi";
+
+type ImpactedObject = Awaited<ReturnType<typeof ontologyApi.getDrift>>["impactedObjects"][number];
 
 export default function SetupMapPage() {
   const {
     ready,
     ontology,
+    businessId,
     querySources,
     confirmations: storedConfirmations,
     setConfirmations,
+    setOntology,
+    setPublishedOntology,
     hasSession,
     removeSource,
     openSourceDialog,
@@ -22,6 +28,7 @@ export default function SetupMapPage() {
   const [selectedId, setSelectedId] = useState<string>();
   const [view, setView] = useState<WorkspaceView>("structure");
   const [navCollapsed, setNavCollapsed] = useState(false);
+  const [impactedObjects, setImpactedObjects] = useState<ImpactedObject[]>([]);
   const selectNode = useCallback((id: string) => {
     setSelectedId(id);
     setView("structure");
@@ -35,6 +42,19 @@ export default function SetupMapPage() {
       openSourceDialog("add", intake);
     }
   }, [openSourceDialog]);
+
+  useEffect(() => {
+    let active = true;
+    if (!ontology) return;
+    void ontologyApi.getDrift(businessId).then((payload) => {
+      if (active) setImpactedObjects(payload.impactedObjects);
+    }).catch(() => {
+      if (active) setImpactedObjects([]);
+    });
+    return () => {
+      active = false;
+    };
+  }, [businessId, ontology]);
 
   return (
     <main className="app-shell">
@@ -58,15 +78,22 @@ export default function SetupMapPage() {
                 ontology={ontology}
                 selectedId={activeId}
                 onSelect={selectNode}
+                impactedObjects={impactedObjects}
               />
             ) : (
               <ConfirmationPanel
                 ontologyId={ontology.id}
+                businessId={businessId}
+                status={ontology.status}
                 items={confirmations}
                 reviewed={reviewed}
-                selectedId={activeId}
                 onSelect={selectNode}
                 onUpdate={updateItem}
+                onStatusChange={(status) => setOntology({ ...ontology, status })}
+                onPublished={(published) => {
+                  setOntology(published);
+                  setPublishedOntology(published);
+                }}
               />
             )}
           </div>
@@ -78,6 +105,7 @@ export default function SetupMapPage() {
           onSchema={() => openSourceDialog("add", "schema")}
           onConnect={() => openSourceDialog("add", "database")}
           onRemove={removeSource}
+          onReconnect={(source) => openSourceDialog("reconnect", "database", source)}
         />
       )}
     </main>

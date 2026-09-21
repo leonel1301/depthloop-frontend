@@ -1,5 +1,5 @@
 ---
-name: DepthLoop
+name: Nuudo
 description: Dense corporate ops desk for confirming a company's data map.
 colors:
   corporate-blue: "#111111"
@@ -130,17 +130,17 @@ components:
     padding: "4px 10px 4px 6px"
 ---
 
-# Design System: DepthLoop
+# Design System: Nuudo
 
 ## Overview
 
 **Creative North Star: "The Confirmed Ledger"**
 
-DepthLoop's shipped Map is a dense corporate operations desk: sticky product chrome and a left navigation rail for Estructura and Revisión. The atmosphere is quiet, light, and exacting. Surfaces sit on warm paper with hairline borders. Ink black is the only action color. A single bronze is reserved for confidence numerals. Dark is graphite, not navy.
+Nuudo's shipped Map is a dense corporate operations desk: sticky product chrome and a left navigation rail for Estructura and Revisión. The atmosphere is quiet, light, and exacting. Surfaces sit on warm paper with hairline borders. Ink black is the only action color. A single bronze is reserved for confidence numerals. Dark is graphite, not navy.
 
 The system is Geist at 13px, not a marketing site. Density is the point: a 56px sticky header, 64px panel heads, 26px stat chips, compact pills. Light on cool paper is the canonical theme. Dark is a paired night desk on the same geometry and type ramp, not a second identity.
 
-The wordmark is DepthLoop at 16px / 750 beside the 30×30 `/depthloop-icon-v2.png` mark, clipped to 8px. New surfaces inherit this ledger, not a looser marketing layout.
+The wordmark is Nuudo at 16px / 750 beside the 30×30 `/nuudo-icon.png` mark, clipped to 8px. New surfaces inherit this ledger, not a looser marketing layout.
 
 **Key Characteristics:**
 - Cool slate paper with a single corporate-blue accent
@@ -189,7 +189,7 @@ Dark mode remaps the same roles onto a navy desk (`#0b1220` canvas, `#121a2b` el
 ### Hierarchy
 - **Display** (700, 26px, −0.4px): The selected concept name in the explorer detail pane only.
 - **Headline** (600, 22px, −0.3px): Overlay drawer titles. Dialog titles sit a step down at 20px.
-- **Title** (650, 16px, −0.2px): Page titles and the DepthLoop wordmark (wordmark weight 750).
+- **Title** (650, 16px, −0.2px): Page titles and the Nuudo wordmark (wordmark weight 750).
 - **Body** (400, 13px, 1.45): App default. Panel titles share 13px at 650. Concept story copy may open to 14px.
 - **Label** (650, 11px): Table headers, panel subcopy, form labels, chips, confidence pills. Controls and source pills use 12px / 600–650 between body and label.
 
@@ -274,7 +274,7 @@ Sticky Muted Paper headers at 11px / 650. Cells 12px, 7px / 10px padding, Slate 
 - **Do** set body at 13px Geist; page titles and the wordmark at 16px; concept names at 26px.
 - **Do** use 7px radius on buttons, icon tools, and fields; 8px on workspace panels; 999px on pills and the stepper.
 - **Do** mark selection with Corporate Blue Wash, not a heavy fill or a rest-surface drop shadow.
-- **Do** keep the wordmark DepthLoop at 16px / 750 beside `/depthloop-icon-v2.png` at 30×30, 8px.
+- **Do** keep the wordmark Nuudo at 16px / 750 beside `/nuudo-icon.png` at 30×30, 8px.
 
 ### Don't:
 - **Don't** use green (or any second hue) as the action accent. Corporate blue is the only accent; teal is confirmation status.

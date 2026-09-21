@@ -57,6 +57,83 @@ export type ConnectedSource = {
   config?: DbConnectionConfig;
 };
 
+export type ReviewState = {
+  status: "suggested" | "confirmed" | "rejected";
+  reviewedAt?: string | null;
+};
+
+export type OntologySource = {
+  id: string;
+  name: string;
+  engine: string;
+};
+
+export type CanonicalAttributeBinding = {
+  id: string;
+  sourceId: string;
+  entityId: string;
+  attributeId: string;
+  schema: string;
+  table: string;
+  column: string;
+  dataType: string;
+  confidence: number;
+  review: ReviewState;
+};
+
+export type CanonicalField = {
+  id: string;
+  name: string;
+  description: string;
+  semanticType: string;
+  aliases: string[];
+  bindings: CanonicalAttributeBinding[];
+};
+
+export type CanonicalConcept = {
+  id: string;
+  name: string;
+  description: string;
+  aliases: string[];
+  bindings: Array<{
+    id: string;
+    sourceId: string;
+    entityId: string;
+    schema: string;
+    table: string;
+    engine: string;
+    confidence: number;
+    review: ReviewState;
+  }>;
+  fields: CanonicalField[];
+};
+
+export type DriftChange = {
+  id: string;
+  kind: "entity" | "attribute" | "relation";
+  operation: "added" | "removed" | "changed";
+  path: string;
+  label: string;
+  breaking: boolean;
+  impact: "low" | "medium" | "high";
+  affectedConceptIds: string[];
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+};
+
+export type DriftReport = {
+  sourceId: string;
+  baselineOntologyId?: string | null;
+  previousFingerprint?: string | null;
+  currentFingerprint: string;
+  detectedAt: string;
+  detected: boolean;
+  impact: "none" | "low" | "medium" | "high";
+  summary: { added: number; removed: number; changed: number; breaking: number };
+  affectedConceptIds: string[];
+  changes: DriftChange[];
+};
+
 export type Attribute = {
   id: string;
   name: string;
@@ -66,6 +143,7 @@ export type Attribute = {
   description?: string;
   confidence: number;
   nullable: boolean;
+  review?: ReviewState;
 };
 
 export type Relation = {
@@ -76,6 +154,7 @@ export type Relation = {
   foreignKey?: string;
   description?: string;
   confidence: number;
+  review?: ReviewState;
 };
 
 export type Entity = {
@@ -88,11 +167,16 @@ export type Entity = {
   confidence: number;
   attributes: Attribute[];
   relations: Relation[];
+  sources: OntologySource[];
+  canonicalConcepts: CanonicalConcept[];
+  drift?: DriftReport | null;
+  review?: ReviewState;
 };
 
 export type OntologyDiscoveryResult = {
   id: string;
   businessId?: string;
+  status: "draft" | "reviewed" | "published";
   entities: Entity[];
   relations: Relation[];
   metadata: {
@@ -101,9 +185,5 @@ export type OntologyDiscoveryResult = {
     pendingConfirmations: number;
     confidenceThreshold?: number;
   };
-  source?: {
-    id: string;
-    name: string;
-    engine: string;
-  };
+  source?: OntologySource;
 };
