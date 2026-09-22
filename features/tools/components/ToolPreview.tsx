@@ -38,6 +38,28 @@ export function ToolPreview({ id }: { id: ToolId }) {
       </div>
     );
   }
+  if (id === "globe") {
+    return (
+      <div className="tool-preview tool-preview-globe" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <circle className="tool-preview-globe-body" cx="60" cy="60" r="46" />
+          <g className="tool-preview-globe-land">
+            <circle cx="38" cy="48" r="1.1" /><circle cx="44" cy="42" r="1.1" /><circle cx="49" cy="50" r="1.1" />
+            <circle cx="36" cy="58" r="1.1" /><circle cx="43" cy="63" r="1.1" /><circle cx="51" cy="58" r="1.1" />
+            <circle cx="47" cy="72" r="1.1" /><circle cx="54" cy="68" r="1.1" /><circle cx="41" cy="78" r="1.1" />
+            <circle cx="62" cy="40" r="1.1" /><circle cx="70" cy="38" r="1.1" /><circle cx="78" cy="44" r="1.1" />
+            <circle cx="66" cy="48" r="1.1" /><circle cx="74" cy="52" r="1.1" /><circle cx="82" cy="50" r="1.1" />
+            <circle cx="69" cy="58" r="1.1" /><circle cx="77" cy="61" r="1.1" /><circle cx="84" cy="58" r="1.1" />
+            <circle cx="72" cy="68" r="1.1" /><circle cx="80" cy="72" r="1.1" /><circle cx="88" cy="66" r="1.1" />
+            <circle cx="58" cy="54" r="1.1" /><circle cx="61" cy="62" r="1.1" /><circle cx="57" cy="70" r="1.1" />
+          </g>
+          <circle className="tool-preview-globe-hot" cx="47" cy="72" r="3.2" />
+          <circle className="tool-preview-globe-hot" cx="76" cy="52" r="2.4" />
+          <circle className="tool-preview-globe-ring" cx="47" cy="72" r="7.5" />
+        </svg>
+      </div>
+    );
+  }
   if (id === "kpi") {
     return (
       <div className="tool-preview tool-preview-kpi" aria-hidden="true">

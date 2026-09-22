@@ -14,12 +14,26 @@ export type QueryTable = {
   truncated: boolean;
 };
 
+export type PresentationSpec = {
+  tool: ToolId;
+  title?: string | null;
+  dimensions: string[];
+  measures: string[];
+  label?: string | null;
+  unit?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  origin?: string | null;
+  destination?: string | null;
+};
+
 export type InferStep = {
   index: number;
   title: string;
   reason: string;
   sql?: string | null;
   table: QueryTable;
+  presentation?: PresentationSpec | null;
   error?: string | null;
 };
 
@@ -54,7 +68,7 @@ async function readError(response: Response) {
         const message = "msg" in issue && typeof issue.msg === "string" ? issue.msg.trim() : "";
         if (!message) return null;
         const location = "loc" in issue && Array.isArray(issue.loc)
-          ? issue.loc.filter((part) => part !== "body").join(" → ")
+          ? issue.loc.filter((part: unknown) => part !== "body").join(" → ")
           : "";
         return location ? `${location}: ${message}` : message;
       })

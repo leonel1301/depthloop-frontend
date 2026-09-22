@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, CheckCircle2, SlidersHorizontal, Sparkles } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Eye, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useI18n, type MessageKey } from "@/features/i18n";
 import { AppHeader } from "@/features/setup/components/AppHeader";
@@ -11,6 +11,7 @@ import { useWorkspaceTools } from "../hooks/useWorkspaceTools";
 import type { ToolCategory, ToolId } from "../models";
 import { ToolIcon } from "./ToolIcon";
 import { ToolPreview } from "./ToolPreview";
+import { ToolPreviewDialog } from "./ToolPreviewDialog";
 
 type Filter = "all" | ToolCategory;
 
@@ -24,6 +25,8 @@ export function ToolsDesk() {
   const [draft, setDraft] = useState<ToolId[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [saved, setSaved] = useState(false);
+  const [preview, setPreview] = useState<ToolId | null>(null);
+  const closePreview = useCallback(() => setPreview(null), []);
   const isOwner = session.user.role !== "member";
 
   const recommended = useMemo(() => recommendations(session.business.industry), [session.business.industry]);
@@ -113,16 +116,21 @@ export function ToolsDesk() {
                   <div className="tool-tags">
                     {tool.tags.map((tag) => <span key={tag}>{t(`tools.tags.${tag}` as MessageKey)}</span>)}
                   </div>
-                  <button
-                    type="button"
-                    className="tool-select"
-                    aria-pressed={selected}
-                    disabled={!workspace.ready || workspace.saving || !isOwner}
-                    onClick={() => toggle(tool.id)}
-                  >
-                    <span>{selected ? <Check size={13} /> : null}</span>
-                    {selected ? t("tools.selected") : t("tools.select")}
-                  </button>
+                  <div className="tool-card-actions">
+                    <button type="button" className="tool-preview-action" aria-haspopup="dialog" onClick={() => setPreview(tool.id)}>
+                      <Eye size={13} /> {t("tools.preview")}
+                    </button>
+                    <button
+                      type="button"
+                      className="tool-select"
+                      aria-pressed={selected}
+                      disabled={!workspace.ready || workspace.saving || !isOwner}
+                      onClick={() => toggle(tool.id)}
+                    >
+                      <span>{selected ? <Check size={13} /> : null}</span>
+                      {selected ? t("tools.selected") : t("tools.select")}
+                    </button>
+                  </div>
                 </div>
               </article>
             );
@@ -146,6 +154,7 @@ export function ToolsDesk() {
           </div>
         </footer>
       </section>
+      {preview ? <ToolPreviewDialog key={preview} tool={preview} onClose={closePreview} /> : null}
     </main>
   );
 }

@@ -49,10 +49,11 @@ export default defineConfig(async () => {
       : undefined,
     optimizeDeps: {
       exclude: ["@tanstack/react-table", "@tanstack/table-core"],
+      include: ["three"],
     },
     ssr: {
       noExternal: [],
-      external: ["@tanstack/react-table", "@tanstack/table-core"],
+      external: ["@tanstack/react-table", "@tanstack/table-core", "three"],
     },
     plugins: [
       vinext(),

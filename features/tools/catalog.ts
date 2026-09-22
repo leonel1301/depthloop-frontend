@@ -5,6 +5,7 @@ export const TOOL_CATALOG: readonly ToolDefinition[] = [
   { id: "line", category: "visual", accent: "slate", tags: ["trends", "time"] },
   { id: "donut", category: "visual", accent: "sand", tags: ["composition", "percentage"] },
   { id: "world-map", category: "geography", accent: "ink", tags: ["logistics", "territory"] },
+  { id: "globe", category: "geography", accent: "slate", tags: ["territory", "magnitude"] },
   { id: "kpi", category: "analysis", accent: "sand", tags: ["indicators", "summary"] },
   { id: "funnel", category: "analysis", accent: "slate", tags: ["conversion", "stages"] },
   { id: "heatmap", category: "analysis", accent: "ink", tags: ["intensity", "patterns"] },

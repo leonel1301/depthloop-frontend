@@ -334,7 +334,7 @@ function AssistantTurn({ message, tools }: { message: InferMessage; tools: ToolI
                 </div>
               </div>
               <p className="infer-step-reason">{step.reason}</p>
-              {step.error ? <p className="form-error">{step.error}</p> : <QueryResultTable table={step.table} tools={tools} preferredTools={message.preferredTools} />}
+              {step.error ? <p className="form-error">{step.error}</p> : <QueryResultTable table={step.table} tools={tools} presentation={step.presentation} />}
               {step.sql ? (
                 <details className="infer-sql">
                   <summary>Detalles de la consulta</summary>

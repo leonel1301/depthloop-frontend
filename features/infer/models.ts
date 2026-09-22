@@ -1,4 +1,5 @@
 import type { ToolId } from "@/features/tools/models";
+import type { PresentationSpec } from "@/features/ontology-discovery/services/queryApi";
 
 export type InferMessage = {
   id: string;
@@ -15,6 +16,7 @@ export type InferMessage = {
       rowCount: number;
       truncated: boolean;
     };
+    presentation?: PresentationSpec | null;
     error?: string | null;
   }>;
   pending?: boolean;

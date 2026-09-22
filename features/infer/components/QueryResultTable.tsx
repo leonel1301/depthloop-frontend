@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronDown, ChevronUp, Copy, Rows3 } from "lucide-react";
 import { useI18n, type MessageKey } from "@/features/i18n";
-import type { QueryTable } from "../../ontology-discovery/services/queryApi";
+import type { PresentationSpec, QueryTable } from "../../ontology-discovery/services/queryApi";
 import { ResultVisualization, isToolCompatible } from "@/features/tools/components/ResultVisualization";
 import { ToolIcon } from "@/features/tools/components/ToolIcon";
 import type { ToolId } from "@/features/tools/models";
@@ -11,7 +11,7 @@ import type { ToolId } from "@/features/tools/models";
 type Props = {
   table: QueryTable;
   tools?: ToolId[];
-  preferredTools?: ToolId[];
+  presentation?: PresentationSpec | null;
 };
 
 function cell(value: string | number | boolean | null) {
@@ -20,7 +20,7 @@ function cell(value: string | number | boolean | null) {
   return String(value);
 }
 
-export function QueryResultTable({ table, tools = [], preferredTools = [] }: Props) {
+export function QueryResultTable({ table, tools = [], presentation }: Props) {
   const { t } = useI18n();
   const [sort, setSort] = useState<{ index: number; direction: "asc" | "desc" } | null>(null);
   const [visibleRows, setVisibleRows] = useState(8);
@@ -36,10 +36,12 @@ export function QueryResultTable({ table, tools = [], preferredTools = [] }: Pro
     return [...table.rows].sort((a, b) => compareValues(a[sort.index], b[sort.index]) * (sort.direction === "asc" ? 1 : -1));
   }, [sort, table.rows]);
 
-  const automaticView = preferredTools.find((tool) => tools.includes(tool) && isToolCompatible(tool, table)) ?? "table";
+  const automaticView = presentation && tools.includes(presentation.tool) && isToolCompatible(presentation.tool, table, presentation)
+    ? presentation.tool
+    : "table";
   const resolvedView = view === "auto"
     ? automaticView
-    : view !== "table" && tools.includes(view) && isToolCompatible(view, table)
+    : view !== "table" && view === presentation?.tool && tools.includes(view) && isToolCompatible(view, table, presentation)
       ? view
       : "table";
 
@@ -93,7 +95,7 @@ export function QueryResultTable({ table, tools = [], preferredTools = [] }: Pro
             <Rows3 size={13} /> {t("tools.tableView")}
           </button>
           {tools.map((tool) => {
-            const compatible = isToolCompatible(tool, table);
+            const compatible = tool === presentation?.tool && isToolCompatible(tool, table, presentation);
             return (
               <button
                 key={tool}
@@ -110,7 +112,7 @@ export function QueryResultTable({ table, tools = [], preferredTools = [] }: Pro
         </div>
       ) : null}
 
-      {resolvedView !== "table" ? <ResultVisualization id={resolvedView} table={table} /> : <div className="infer-table-scroll" tabIndex={0} aria-label={t("infer.result")}>
+      {resolvedView !== "table" ? <ResultVisualization id={resolvedView} table={table} presentation={presentation} /> : <div className="infer-table-scroll" tabIndex={0} aria-label={t("infer.result")}>
         <table className="query-preview infer-result-table">
           <thead>
             <tr>

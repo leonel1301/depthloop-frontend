@@ -3,6 +3,7 @@ export const TOOL_IDS = [
   "line",
   "donut",
   "world-map",
+  "globe",
   "kpi",
   "funnel",
   "heatmap",

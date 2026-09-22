@@ -59,10 +59,11 @@ test("keeps the authentication boot shell scoped to AuthGate", async () => {
 });
 
 test("keeps optional tools between Business and Infer and exposes them only in query results", async () => {
-  const [stepper, toolsPage, toolsDesk, resultTable, toolsApi] = await Promise.all([
+  const [stepper, toolsPage, toolsDesk, previewDialog, resultTable, toolsApi] = await Promise.all([
     readFile(new URL("../features/setup/components/SetupStepper.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/setup/tools/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/tools/components/ToolsDesk.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/components/ToolPreviewDialog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/infer/components/QueryResultTable.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/tools/services/toolsApi.ts", import.meta.url), "utf8"),
   ]);
@@ -72,6 +73,10 @@ test("keeps optional tools between Business and Infer and exposes them only in q
   assert.match(toolsPage, /<ToolsDesk\s*\/>/);
   assert.match(toolsDesk, /TOOL_CATALOG/);
   assert.match(toolsDesk, /tools\.optional/);
+  assert.match(toolsDesk, /tools\.preview/);
+  assert.match(toolsDesk, /ToolPreviewDialog/);
+  assert.match(previewDialog, /ResultVisualization/);
+  assert.match(previewDialog, /Datos de demostración/);
   assert.match(resultTable, /tools\.map/);
   assert.match(resultTable, /isToolCompatible/);
   assert.match(toolsApi, /\/api\/tools\/selection/);
@@ -95,4 +100,22 @@ test("recommends enabled tools while composing and carries the choice into infer
   assert.match(composer, /attachedTools/);
   assert.match(queryApi, /preferredTools/);
   assert.match(resultTable, /automaticView/);
+});
+
+test("binds visualizations to explicit API presentation metadata", async () => {
+  const [queryApi, resultTable, visualization, globeParser] = await Promise.all([
+    readFile(new URL("../features/ontology-discovery/services/queryApi.ts", import.meta.url), "utf8"),
+    readFile(new URL("../features/infer/components/QueryResultTable.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/components/ResultVisualization.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/tools/globe/parseGlobeTable.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(queryApi, /type PresentationSpec/);
+  assert.match(queryApi, /presentation\?: PresentationSpec/);
+  assert.match(resultTable, /automaticView = presentation/);
+  assert.match(resultTable, /tool === presentation\?\.tool/);
+  assert.match(resultTable, /presentation=\{presentation\}/);
+  assert.match(visualization, /presentation\?\.measures/);
+  assert.match(globeParser, /explicit\?\.latitude/);
+  assert.match(globeParser, /explicit\?\.origin/);
 });

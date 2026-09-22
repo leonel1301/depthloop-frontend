@@ -1,17 +1,24 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { QueryTable } from "@/features/ontology-discovery/services/queryApi";
+import type { PresentationSpec, QueryTable } from "@/features/ontology-discovery/services/queryApi";
 import type { ToolId } from "../models";
+import { GlobeViz } from "../globe/GlobeViz";
+import { globeGeoIndex } from "../globe/parseGlobeTable";
 
 type Point = { label: string; value: number; row: QueryTable["rows"][number] };
 
-export function isToolCompatible(id: ToolId, table: QueryTable) {
-  const shape = dataShape(table);
+export function isToolCompatible(id: ToolId, table: QueryTable, presentation?: PresentationSpec | null) {
+  const explicit = presentation?.tool === id ? presentation : undefined;
+  const shape = dataShape(table, explicit);
   if (id === "kpi") return shape.numericIndices.length > 0;
   if (id === "gauge") return shape.numericIndices.length > 0;
   if (id === "heatmap") return shape.numericIndices.length > 0 && table.rows.length > 1;
   if (id === "world-map") return shape.geoIndex >= 0 && shape.numericIndex >= 0;
+  if (id === "globe") {
+    const index = globeGeoIndex(table, explicit);
+    return index >= 0 && table.rows.some((row) => String(row[index] ?? "").trim());
+  }
   if (id === "route-map") return shape.geoIndices.length >= 2 || (shape.geoIndex >= 0 && table.rows.length > 1);
   if (id === "timeline") return shape.dateIndex >= 0;
   if (id === "scatter") return shape.numericIndices.length >= 2 && table.rows.filter((row) => shape.numericIndices.slice(0, 2).every((index) => isNumericValue(row[index]))).length > 1;
@@ -20,13 +27,15 @@ export function isToolCompatible(id: ToolId, table: QueryTable) {
   return shape.numericIndex >= 0 && shape.points.length > 0;
 }
 
-export function ResultVisualization({ id, table }: { id: ToolId; table: QueryTable }) {
-  const shape = dataShape(table);
+export function ResultVisualization({ id, table, presentation }: { id: ToolId; table: QueryTable; presentation?: PresentationSpec | null }) {
+  const explicit = presentation?.tool === id ? presentation : undefined;
+  const shape = dataShape(table, explicit);
   if (id === "bar") return <BarChart points={shape.points} />;
   if (id === "line") return <LineChart points={shape.points} />;
   if (id === "area") return <LineChart points={shape.points} areaOnly />;
   if (id === "donut") return <DonutChart points={shape.points} />;
   if (id === "world-map") return <WorldMap table={table} geoIndex={shape.geoIndex} numericIndex={shape.numericIndex} />;
+  if (id === "globe") return <GlobeViz table={table} presentation={explicit} />;
   if (id === "route-map") return <RouteMap table={table} geoIndices={shape.geoIndices} />;
   if (id === "kpi") return <KpiCards table={table} numericIndices={shape.numericIndices} />;
   if (id === "gauge") return <GaugeChart table={table} numericIndex={shape.numericIndex} />;
@@ -38,19 +47,32 @@ export function ResultVisualization({ id, table }: { id: ToolId; table: QueryTab
   return <Timeline table={table} dateIndex={shape.dateIndex} numericIndex={shape.numericIndex} />;
 }
 
-function dataShape(table: QueryTable) {
-  const numericIndices = table.columns
+function dataShape(table: QueryTable, presentation?: PresentationSpec) {
+  const inferredNumericIndices = table.columns
     .map((_, index) => index)
     .filter((index) => !isIdentifierColumn(table.columns[index]) && table.rows.some((row) => isNumericValue(row[index])));
+  const specifiedMeasures = presentation?.measures
+    .map((column) => columnIndex(table, column))
+    .filter((index) => index >= 0 && table.rows.some((row) => isNumericValue(row[index]))) ?? [];
+  const numericIndices = specifiedMeasures.length ? specifiedMeasures : inferredNumericIndices;
   const numericIndex = numericIndices[0] ?? -1;
-  const labelIndex = table.columns.findIndex((_, index) => !numericIndices.includes(index));
-  const dateIndex = table.columns.findIndex((column, index) => {
+  const specifiedDimensions = presentation?.dimensions.map((column) => columnIndex(table, column)).filter((index) => index >= 0) ?? [];
+  const specifiedLabel = columnIndex(table, presentation?.label);
+  const labelIndex = specifiedLabel >= 0
+    ? specifiedLabel
+    : specifiedDimensions[0] ?? table.columns.findIndex((_, index) => !numericIndices.includes(index));
+  const inferredDateIndex = table.columns.findIndex((column, index) => {
     if (/date|time|fecha|día|dia|mes|month|week|semana|year|año/i.test(column)) return true;
     return table.rows.some((row) => typeof row[index] === "string" && !Number.isNaN(Date.parse(String(row[index]))));
   });
-  const geoIndices = table.columns
+  const dateIndex = specifiedDimensions.find((index) => index === inferredDateIndex || /date|time|fecha|día|dia|mes|month|week|semana|year|año/i.test(table.columns[index])) ?? inferredDateIndex;
+  const inferredGeoIndices = table.columns
     .map((column, index) => (/country|pa[ií]s|nation|iso|region|territor|city|ciudad|origin|origen|destination|destino/i.test(column) ? index : -1))
     .filter((index) => index >= 0);
+  const specifiedGeoIndices = [presentation?.origin, presentation?.destination, ...(presentation?.dimensions ?? [])]
+    .map((column) => columnIndex(table, column))
+    .filter((index) => index >= 0);
+  const geoIndices = specifiedGeoIndices.length ? [...new Set(specifiedGeoIndices)] : inferredGeoIndices;
   const geoIndex = geoIndices[0] ?? -1;
   let points: Point[] = [];
   if (table.rows.length === 1 && numericIndices.length > 1) {
@@ -67,6 +89,12 @@ function dataShape(table: QueryTable) {
     }));
   }
   return { numericIndices, numericIndex, labelIndex, dateIndex, geoIndices, geoIndex, points };
+}
+
+function columnIndex(table: QueryTable, column: string | null | undefined) {
+  if (!column) return -1;
+  const normalized = column.toLocaleLowerCase("en");
+  return table.columns.findIndex((candidate) => candidate.toLocaleLowerCase("en") === normalized);
 }
 
 function BarChart({ points }: { points: Point[] }) {
@@ -170,7 +198,7 @@ function ScatterPlot({ table, numericIndices }: { table: QueryTable; numericIndi
 
 function GaugeChart({ table, numericIndex }: { table: QueryTable; numericIndex: number }) {
   const valueRow = table.rows.find((row) => isNumericValue(row[numericIndex]));
-  const raw = asNumber(valueRow?.[numericIndex]);
+  const raw = asNumber(valueRow?.[numericIndex] ?? null);
   const value = Math.max(0, Math.min(100, raw));
   return (
     <div className="result-viz result-gauge">
